@@ -1,0 +1,1 @@
+rootProject.name = "Wedding_Planner_Backend"
