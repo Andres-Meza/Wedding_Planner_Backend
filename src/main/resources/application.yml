@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: Wedding_Planner_Backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/WeddingPlanner
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:Andresmeza2208}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+app:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    # Cambia esta contraseña con la variable de entorno ADMIN_PASSWORD antes
+    # de desplegar a cualquier entorno compartido; este valor es solo para
+    # desarrollo local.
+    password: ${ADMIN_PASSWORD:changeme}
