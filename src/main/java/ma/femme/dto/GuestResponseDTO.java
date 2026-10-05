@@ -9,6 +9,7 @@ public record GuestResponseDTO(
         String fullName,
         boolean isMinor,
         AttendanceStatus attendance,
-        String dietaryRestriction
+        String dietaryRestriction,
+        String selectedMenu
 ) {
 }

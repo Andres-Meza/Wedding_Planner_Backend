@@ -1,6 +1,7 @@
 package ma.femme.service;
 
 import lombok.RequiredArgsConstructor;
+import ma.femme.dto.AssignedGuestDTO;
 import ma.femme.dto.AssignmentResultDTO;
 import ma.femme.dto.ManualAssignmentRequest;
 import ma.femme.dto.TableWithGuestsDTO;
@@ -162,8 +163,10 @@ public class TableAssignmentService {
                         .capacity(table.getCapacity())
                         .guests(
                                 tableAssignmentRepository.findByTableWeddingId(table.getId()).stream()
-                                        .map(assignment ->
-                                                assignment.getGuest().getFullName())
+                                        .map(assignment -> AssignedGuestDTO.builder()
+                                                .guestId(assignment.getGuest().getId())
+                                                .fullName(assignment.getGuest().getFullName())
+                                                .build())
                                         .toList())
                         .build())
                 .toList();

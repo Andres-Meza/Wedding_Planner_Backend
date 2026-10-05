@@ -9,12 +9,17 @@ import ma.femme.entity.AttendanceStatus;
 import ma.femme.entity.Guest;
 import ma.femme.entity.Invitation;
 import ma.femme.entity.InvitationStatus;
+import ma.femme.entity.KidsMenuOption;
+import ma.femme.entity.MenuOption;
+import ma.femme.dto.MenuCatalogDTO;
+import ma.femme.dto.MenuOptionDTO;
 import ma.femme.exception.InvitationNotFoundException;
 import ma.femme.repository.InvitationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,6 +59,14 @@ public class InvitationService {
             guest.setDietaryRestriction(response.dietaryRestriction());
             guest.setRespondedBy(request.respondedBy());
             guest.setResponseDate(LocalDateTime.now());
+
+            if (response.attendance() == AttendanceStatus.CONFIRMED) {
+                guest.setSelectedMenu(validateAndGetMenu(guest, response.selectedMenu()));
+            } else {
+                // Si no asiste, cualquier menú que haya quedado guardado de
+                // antes ya no aplica.
+                guest.setSelectedMenu(null);
+            }
         }
 
         updateOverallStatus(invitation);
@@ -61,6 +74,59 @@ public class InvitationService {
         // JPA synchronizes the changes when the transaction completes
         // through dirty checking; an explicit save is not required here.
         return mapToDto(invitation);
+    }
+
+    // Un invitado que confirma asistencia debe elegir un menú válido para
+    // su categoría (adulto o menor) — el catálogo correcto depende de
+    // guest.isMinor(), por eso se valida acá y no con un CHECK en la BD.
+    private String validateAndGetMenu(Guest guest, String selectedMenu) {
+        if (selectedMenu == null || selectedMenu.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Debes elegir una opción de menú para " + guest.getFullName());
+        }
+
+        boolean isValid = guest.isMinor()
+                ? isValidEnumValue(KidsMenuOption.class, selectedMenu)
+                : isValidEnumValue(MenuOption.class, selectedMenu);
+
+        if (!isValid) {
+            throw new IllegalArgumentException(
+                    "'" + selectedMenu + "' no es una opción de menú válida para "
+                            + guest.getFullName());
+        }
+
+        return selectedMenu;
+    }
+
+    private static <E extends Enum<E>> boolean isValidEnumValue(Class<E> enumClass, String value) {
+        for (E constant : enumClass.getEnumConstants()) {
+            if (constant.name().equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Transactional(readOnly = true)
+    public MenuCatalogDTO getMenuCatalog() {
+        List<MenuOptionDTO> adultOptions = Arrays.stream(MenuOption.values())
+                .map(option -> MenuOptionDTO.builder()
+                        .value(option.name())
+                        .label(option.getLabel())
+                        .build())
+                .toList();
+
+        List<MenuOptionDTO> kidsOptions = Arrays.stream(KidsMenuOption.values())
+                .map(option -> MenuOptionDTO.builder()
+                        .value(option.name())
+                        .label(option.getLabel())
+                        .build())
+                .toList();
+
+        return MenuCatalogDTO.builder()
+                .adultOptions(adultOptions)
+                .kidsOptions(kidsOptions)
+                .build();
     }
 
     private void updateOverallStatus(Invitation invitation) {
@@ -97,6 +163,7 @@ public class InvitationService {
                         .isMinor(guest.isMinor())
                         .attendance(guest.getAttendance())
                         .dietaryRestriction(guest.getDietaryRestriction())
+                        .selectedMenu(guest.getSelectedMenu())
                         .build())
                 .toList();
 

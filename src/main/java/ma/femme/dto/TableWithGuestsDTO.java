@@ -9,6 +9,6 @@ public record TableWithGuestsDTO(
         Long tableId,
         String nameOrNumber,
         Integer capacity,
-        List<String> guests
+        List<AssignedGuestDTO> guests
 ) {
 }

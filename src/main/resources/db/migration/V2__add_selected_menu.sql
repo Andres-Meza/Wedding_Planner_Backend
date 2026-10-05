@@ -1,0 +1,2 @@
+ALTER TABLE guest
+    ADD COLUMN selected_menu VARCHAR(50);

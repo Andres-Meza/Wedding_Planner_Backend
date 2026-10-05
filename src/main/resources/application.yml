@@ -3,9 +3,9 @@ spring:
     name: Wedding_Planner_Backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/WeddingPlanner
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:Andresmeza2208}
+    url: jdbc:postgresql://ep-spring-cake-b4gcwkuc-pooler.c-6.us-east-2.aws.neon.tech/WeddingPlanner?sslmode=require&channel_binding=require
+    username: neondb_owner
+    password: npg_YP4gi8MZDJVW
 
   jpa:
     hibernate:
@@ -25,7 +25,4 @@ server:
 app:
   admin:
     username: ${ADMIN_USERNAME:admin}
-    # Cambia esta contraseña con la variable de entorno ADMIN_PASSWORD antes
-    # de desplegar a cualquier entorno compartido; este valor es solo para
-    # desarrollo local.
     password: ${ADMIN_PASSWORD:changeme}

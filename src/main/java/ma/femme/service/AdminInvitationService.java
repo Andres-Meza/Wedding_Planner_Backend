@@ -7,6 +7,7 @@ import ma.femme.dto.CreateInvitationRequest;
 import ma.femme.dto.GuestResponseDTO;
 import ma.femme.entity.Guest;
 import ma.femme.entity.Invitation;
+import ma.femme.entity.InvitationType;
 import ma.femme.repository.InvitationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,11 @@ public class AdminInvitationService {
     @Transactional
     public AdminInvitationResponseDTO createInvitation(
             CreateInvitationRequest request) {
+
+        if (request.type() == InvitationType.INDIVIDUAL && request.guests().size() > 1) {
+            throw new IllegalArgumentException(
+                    "An individual invitation can only have one guest; use FAMILY for more than one");
+        }
 
         Invitation invitation = Invitation.builder()
                 .type(request.type())
@@ -52,6 +58,11 @@ public class AdminInvitationService {
         Invitation invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No invitation exists with id " + invitationId));
+
+        if (invitation.getType() == InvitationType.INDIVIDUAL && !invitation.getGuests().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "This is an individual invitation and already has a guest; use FAMILY for more than one");
+        }
 
         Guest guest = Guest.builder()
                 .fullName(request.fullName())
@@ -88,6 +99,7 @@ public class AdminInvitationService {
                         .isMinor(guest.isMinor())
                         .attendance(guest.getAttendance())
                         .dietaryRestriction(guest.getDietaryRestriction())
+                        .selectedMenu(guest.getSelectedMenu())
                         .build())
                 .toList();
 
