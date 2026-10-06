@@ -39,7 +39,7 @@ public class SecurityConfig {
 
     // Origen(es) del frontend permitidos a llamar esta API desde el
     // navegador. En desarrollo, el Angular CLI sirve en el 4200.
-    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    @Value("${app.cors.allowed-origins:https://wedding-planner-frontend-two.vercel.app}")
     private String[] allowedOrigins;
 
     @Bean
