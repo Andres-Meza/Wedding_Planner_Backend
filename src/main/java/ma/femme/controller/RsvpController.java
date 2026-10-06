@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/rsvp")
+@RequestMapping("/rsvp")
 @RequiredArgsConstructor
 public class RsvpController {
 

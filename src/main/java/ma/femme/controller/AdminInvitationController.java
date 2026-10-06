@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 // TODO: Protect this controller with authentication (Spring Security)
 // before deploying to production — it remains open for development for now.
 @RestController
-@RequestMapping("/api/admin/invitations")
+@RequestMapping("/admin/invitations")
 @RequiredArgsConstructor
 public class AdminInvitationController {
 

@@ -21,7 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * Los endpoints de RSVP quedan públicos (el token en la URL es la propia
  * credencial de acceso a esa invitación). Los endpoints de administración
- * (/api/admin/**) requieren autenticación HTTP Basic con las credenciales
+ * (/admin/**) requieren autenticación HTTP Basic con las credenciales
  * definidas en app.admin.username / app.admin.password.
  *
  * CSRF queda deshabilitado porque esta es una API sin estado (sin sesiones
