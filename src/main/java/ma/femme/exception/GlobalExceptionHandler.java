@@ -13,51 +13,57 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(InvitationNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleInvitationNotFound(
-            InvitationNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
+  @ExceptionHandler(InvitationNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleInvitationNotFound(
+      InvitationNotFoundException ex) {
+    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidArgument(
-            IllegalArgumentException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
+  // Borrar un menú que ya eligieron invitados.
+  @ExceptionHandler(MenuInUseException.class)
+  public ResponseEntity<Map<String, Object>> handleMenuInUse(MenuInUseException ex) {
+    return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+  }
 
-    // Se dispara, por ejemplo, al borrar una mesa que todavía tiene
-    // invitados asignados (la FK tiene ON DELETE RESTRICT).
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
-            DataIntegrityViolationException ex) {
-        return buildResponse(
-                HttpStatus.CONFLICT,
-                "This action violates a data integrity constraint — check for related records "
-                        + "(e.g. a table still has guests assigned) before trying again.");
-    }
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<Map<String, Object>> handleInvalidArgument(
+      IllegalArgumentException ex) {
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
-            MethodArgumentNotValidException ex) {
+  // Se dispara, por ejemplo, al borrar una mesa que todavía tiene
+  // invitados asignados (la FK tiene ON DELETE RESTRICT).
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
+      DataIntegrityViolationException ex) {
+    return buildResponse(
+        HttpStatus.CONFLICT,
+        "This action violates a data integrity constraint — check for related records "
+            + "(e.g. a table still has guests assigned) before trying again.");
+  }
 
-        String detail = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .reduce((a, b) -> a + "; " + b)
-                .orElse("Invalid data");
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<Map<String, Object>> handleValidation(
+      MethodArgumentNotValidException ex) {
 
-        return buildResponse(HttpStatus.BAD_REQUEST, detail);
-    }
+    String detail = ex.getBindingResult().getFieldErrors().stream()
+        .map(error -> error.getField() + ": " + error.getDefaultMessage())
+        .reduce((a, b) -> a + "; " + b)
+        .orElse("Invalid data");
 
-    private ResponseEntity<Map<String, Object>> buildResponse(
-            HttpStatus status,
-            String message) {
+    return buildResponse(HttpStatus.BAD_REQUEST, detail);
+  }
 
-        Map<String, Object> body = Map.of(
-                "timestamp", LocalDateTime.now().toString(),
-                "status", status.value(),
-                "message", message
-        );
+  private ResponseEntity<Map<String, Object>> buildResponse(
+      HttpStatus status,
+      String message) {
 
-        return ResponseEntity.status(status).body(body);
-    }
+    Map<String, Object> body = Map.of(
+        "timestamp", LocalDateTime.now().toString(),
+        "status", status.value(),
+        "message", message
+    );
+
+    return ResponseEntity.status(status).body(body);
+  }
 }

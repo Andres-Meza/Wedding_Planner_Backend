@@ -14,42 +14,47 @@ import java.time.LocalDateTime;
 @Builder
 public class Guest {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invitation_id", nullable = false)
-    private Invitation invitation;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "invitation_id", nullable = false)
+  private Invitation invitation;
 
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
+  @Column(name = "full_name", nullable = false)
+  private String fullName;
 
-    @Column(name = "is_minor", nullable = false)
-    @Builder.Default
-    private boolean isMinor = false;
+  @Column(name = "is_minor", nullable = false)
+  @Builder.Default
+  private boolean isMinor = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "attendance", nullable = false, length = 20)
-    @Builder.Default
-    private AttendanceStatus attendance = AttendanceStatus.NO_RESPONSE;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "attendance", nullable = false, length = 20)
+  @Builder.Default
+  private AttendanceStatus attendance = AttendanceStatus.NO_RESPONSE;
 
-    // Name of the person who submitted the response:
-    // the guest themselves or the person responsible for the invitation.
-    @Column(name = "responded_by")
-    private String respondedBy;
+  // Name of the person who submitted the response:
+  // the guest themselves or the person responsible for the invitation.
+  @Column(name = "responded_by")
+  private String respondedBy;
 
-    // Alergia o restricción alimentaria puntual (ej: "maní", "mariscos").
-    @Column(name = "dietary_restriction")
-    private String dietaryRestriction;
+  // Tipo de alergia alimentaria. null = sin alergias reportadas.
+  @Enumerated(EnumType.STRING)
+  @Column(name = "allergy_type", length = 20)
+  private AllergyType allergyType;
 
-    // Guarda el nombre del enum elegido: un valor de MenuOption si el
-    // invitado es adulto, o de KidsMenuOption si es menor. Se valida en
-    // el servicio según corresponda, no a nivel de base de datos, porque
-    // una sola columna cubre dos catálogos distintos.
-    @Column(name = "selected_menu", length = 50)
-    private String selectedMenu;
+  // Observaciones / restricciones alimentarias en texto libre
+  // (ej: "No puede consumir ningún alimento con frutos secos").
+  @Column(name = "dietary_restriction")
+  private String dietaryRestriction;
 
-    @Column(name = "response_date")
-    private LocalDateTime responseDate;
+  // Menú elegido. Debe ser de la misma categoría que el invitado
+  // (menor -> menú infantil); se valida en el servicio.
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "menu_id")
+  private Menu menu;
+
+  @Column(name = "response_date")
+  private LocalDateTime responseDate;
 }

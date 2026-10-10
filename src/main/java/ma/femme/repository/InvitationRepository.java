@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface InvitationRepository extends JpaRepository<Invitation, Long> {
 
-    @EntityGraph(attributePaths = "guests")
-    Optional<Invitation> findByUniqueToken(UUID uniqueToken);
+  // Carga también el menú de cada invitado para no hacer una consulta extra
+  // por cada uno al armar la respuesta.
+  @EntityGraph(attributePaths = {"guests", "guests.menu"})
+  Optional<Invitation> findByUniqueToken(UUID uniqueToken);
 }
