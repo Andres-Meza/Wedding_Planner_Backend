@@ -131,21 +131,51 @@ public class TableAssignmentService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No table exists with id " + request.tableId()));
 
-        long occupiedSpots =
-                tableAssignmentRepository.countByTableWeddingId(table.getId());
+        // Si el invitado ya tiene asignación se actualiza esa misma fila (no
+        // se borra y se crea otra): así mover a alguien de silla dentro de
+        // una mesa llena no falla, y no se choca con el UNIQUE de guest_id.
+        TableAssignment assignment = tableAssignmentRepository
+                .findByGuestId(guest.getId())
+                .orElse(null);
 
-        if (occupiedSpots >= table.getCapacity()) {
-            throw new IllegalArgumentException(
-                    "Table '" + table.getNameOrNumber() + "' is already full");
+        boolean alreadyAtThisTable = assignment != null
+                && assignment.getTableWedding().getId().equals(table.getId());
+
+        if (!alreadyAtThisTable) {
+            long occupiedSpots =
+                    tableAssignmentRepository.countByTableWeddingId(table.getId());
+
+            if (occupiedSpots >= table.getCapacity()) {
+                throw new IllegalArgumentException(
+                        "Table '" + table.getNameOrNumber() + "' is already full");
+            }
         }
 
-        // If the guest already had a table, remove that assignment before
-        // creating the new one (prevents violating the UNIQUE constraint
-        // on guest_id).
-        tableAssignmentRepository.deleteByGuestId(guest.getId());
+        Integer seatIndex = request.seatIndex();
 
-        tableAssignmentRepository.save(
-                createAssignment(guest, table, true));
+        if (seatIndex != null) {
+            if (seatIndex >= table.getCapacity()) {
+                throw new IllegalArgumentException(
+                        "Table '" + table.getNameOrNumber() + "' has no seat " + (seatIndex + 1));
+            }
+
+            if (tableAssignmentRepository.existsByTableWeddingIdAndSeatIndexAndGuestIdNot(
+                    table.getId(), seatIndex, guest.getId())) {
+                throw new IllegalArgumentException(
+                        "Seat " + (seatIndex + 1) + " at table '"
+                                + table.getNameOrNumber() + "' is already taken");
+            }
+        }
+
+        if (assignment == null) {
+            assignment = createAssignment(guest, table, true);
+        }
+
+        assignment.setTableWedding(table);
+        assignment.setSeatIndex(seatIndex);
+        assignment.setManuallyAssigned(true);
+
+        tableAssignmentRepository.save(assignment);
     }
 
     @Transactional
@@ -166,6 +196,7 @@ public class TableAssignmentService {
                                         .map(assignment -> AssignedGuestDTO.builder()
                                                 .guestId(assignment.getGuest().getId())
                                                 .fullName(assignment.getGuest().getFullName())
+                                                .seatIndex(assignment.getSeatIndex())
                                                 .build())
                                         .toList())
                         .build())

@@ -31,6 +31,35 @@ public class TableService {
         return mapToDTO(saved);
     }
 
+    // Renombrar la mesa o cambiar su capacidad (el plano lo usa para ajustar
+    // cuántas sillas dibuja).
+    @Transactional
+    public TableResponseDTO update(Long id, CreateTableRequest request) {
+        TableWedding table = tableRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No table exists with id " + id));
+
+        long occupiedSpots = tableAssignmentRepository.countByTableWeddingId(id);
+
+        if (request.capacity() < occupiedSpots) {
+            throw new IllegalArgumentException(
+                    "No puedes reducir la capacidad a " + request.capacity()
+                            + ": hay " + occupiedSpots + " invitados sentados en esta mesa");
+        }
+
+        if (tableAssignmentRepository.existsByTableWeddingIdAndSeatIndexGreaterThanEqual(
+                id, request.capacity())) {
+            throw new IllegalArgumentException(
+                    "Hay invitados sentados en sillas que desaparecerían; muévelos antes de reducir la capacidad");
+        }
+
+        table.setNameOrNumber(request.nameOrNumber());
+        table.setCapacity(request.capacity());
+        table.setArea(request.zone());
+
+        return mapToDTO(table);
+    }
+
     @Transactional(readOnly = true)
     public List<TableResponseDTO> listAll() {
         return tableRepository.findAll().stream()

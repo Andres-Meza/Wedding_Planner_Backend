@@ -24,6 +24,10 @@ public class TableAssignment {
     @JoinColumn(name = "table_id", nullable = false)
     private TableWedding tableWedding;
 
+    // Silla concreta dentro de la mesa (0 = primera). null = sin silla fija.
+    @jakarta.persistence.Column(name = "seat_index")
+    private Integer seatIndex;
+
     @jakarta.persistence.Column(name = "manually_assigned", nullable = false)
     @Builder.Default
     private boolean manuallyAssigned = false;
