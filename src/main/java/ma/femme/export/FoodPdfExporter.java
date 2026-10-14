@@ -14,6 +14,7 @@ import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import ma.femme.dto.GuestFoodRowDTO;
+import ma.femme.dto.MainCourseDTO;
 import ma.femme.entity.AttendanceStatus;
 import ma.femme.service.FoodReportService.FoodSummary;
 import ma.femme.service.FoodReportService.MenuCount;
@@ -184,7 +185,7 @@ public class FoodPdfExporter {
       } else {
         cell.addElement(new Paragraph("Menú: " + menu.name(), NORMAL));
         cell.addElement(new Paragraph("Entrada: " + menu.starter(), NORMAL));
-        cell.addElement(new Paragraph("Plato fuerte: " + menu.mainCourse(), NORMAL));
+        addMainCourse(cell, menu.mainCourse());
         cell.addElement(new Paragraph("Postre: " + menu.dessert(), NORMAL));
         cell.addElement(new Paragraph("Bebida: " + menu.drink(), NORMAL));
       }
@@ -205,6 +206,31 @@ public class FoodPdfExporter {
     }
 
     document.add(table);
+  }
+
+  // "Plato fuerte" como sección, con sus componentes sangrados debajo para que
+  // no se confundan con la entrada, el postre o la bebida. Los componentes
+  // opcionales que no se definieron (menús infantiles) se omiten.
+  private void addMainCourse(PdfPCell cell, MainCourseDTO mainCourse) {
+    cell.addElement(new Paragraph("Plato fuerte:", BOLD));
+
+    if (mainCourse == null) {
+      return;
+    }
+
+    addMainCourseLine(cell, "Proteína 1", mainCourse.protein1());
+    addMainCourseLine(cell, "Proteína 2", mainCourse.protein2());
+    addMainCourseLine(cell, "Acompañamiento", mainCourse.accompaniment());
+    addMainCourseLine(cell, "Ensalada", mainCourse.salad());
+  }
+
+  private void addMainCourseLine(PdfPCell cell, String label, String value) {
+    if (value == null || value.isBlank()) {
+      return;
+    }
+    Paragraph line = new Paragraph("- " + label + ": " + value, NORMAL);
+    line.setIndentationLeft(14);
+    cell.addElement(line);
   }
 
   private Paragraph sectionTitle(String text) {

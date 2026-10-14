@@ -5,7 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-// Menú completo (entrada, plato fuerte, postre y bebida). Los menús para
+// Menú completo (entrada, plato fuerte, postre y bebida). El plato fuerte es
+// una sección propia (MainCourse) con sus cuatro componentes. Los menús para
 // adultos y para niños comparten estructura; los distingue "kids".
 @Entity
 @Table(name = "menu")
@@ -26,8 +27,10 @@ public class Menu {
   @Column(nullable = false, length = 200)
   private String starter;
 
-  @Column(name = "main_course", nullable = false, length = 200)
-  private String mainCourse;
+  // Las columnas protein_1, protein_2, accompaniment y salad de la tabla
+  // "menu" las define MainCourse.
+  @Embedded
+  private MainCourse mainCourse;
 
   @Column(nullable = false, length = 200)
   private String dessert;

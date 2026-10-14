@@ -22,14 +22,22 @@ import java.util.List;
 @Component
 public class FoodExcelExporter {
 
+  // Columnas de la hoja de invitados. El plato fuerte ocupa cuatro columnas
+  // consecutivas (de MAIN_COURSE_FIRST a MAIN_COURSE_LAST) que se agrupan
+  // bajo un encabezado combinado "Plato fuerte".
   private static final String[] HEADERS = {
-    "Invitado", "Tipo", "Asistencia", "Menú", "Entrada", "Plato fuerte",
-    "Postre", "Bebida", "Tiene alergia", "Alergia", "Observaciones"
+          "Invitado", "Tipo", "Asistencia", "Menú", "Entrada",
+          "Proteína 1", "Proteína 2", "Acompañamiento", "Ensalada",
+          "Postre", "Bebida", "Tiene alergia", "Alergia", "Observaciones"
   };
+
+  private static final int MAIN_COURSE_FIRST = 5;
+  private static final int MAIN_COURSE_LAST = 8;
+  private static final String MAIN_COURSE_TITLE = "Plato fuerte";
 
   // Anchos en caracteres. Fijos a propósito: autoSizeColumn necesita fuentes
   // del sistema (AWT) y falla en contenedores mínimos como el de Railway.
-  private static final int[] WIDTHS = {28, 10, 15, 18, 24, 26, 20, 18, 14, 16, 40};
+  private static final int[] WIDTHS = {28, 10, 15, 18, 24, 22, 22, 20, 20, 20, 18, 14, 16, 40};
 
   public byte[] export(List<GuestFoodRowDTO> rows, FoodSummary summary) {
     try (XSSFWorkbook workbook = new XSSFWorkbook();
@@ -49,31 +57,52 @@ public class FoodExcelExporter {
   private void buildGuestSheet(XSSFWorkbook workbook, Styles styles, List<GuestFoodRowDTO> rows) {
     Sheet sheet = workbook.createSheet("Invitados");
 
-    Row header = sheet.createRow(0);
+    // Encabezado de dos filas: arriba el grupo "Plato fuerte" (combinado sobre
+    // sus cuatro columnas) y abajo los nombres de cada columna. Las columnas
+    // que no pertenecen al plato fuerte combinan ambas filas.
+    Row groupRow = sheet.createRow(0);
+    Row header = sheet.createRow(1);
+
     for (int i = 0; i < HEADERS.length; i++) {
-      header.createCell(i).setCellValue(HEADERS[i]);
-      header.getCell(i).setCellStyle(styles.header);
       sheet.setColumnWidth(i, WIDTHS[i] * 256);
+
+      if (isMainCourseColumn(i)) {
+        header.createCell(i).setCellValue(HEADERS[i]);
+        header.getCell(i).setCellStyle(styles.header);
+        groupRow.createCell(i).setCellStyle(styles.header);
+      } else {
+        groupRow.createCell(i).setCellValue(HEADERS[i]);
+        groupRow.getCell(i).setCellStyle(styles.header);
+        header.createCell(i).setCellStyle(styles.header);
+        sheet.addMergedRegion(new CellRangeAddress(0, 1, i, i));
+      }
     }
 
-    int rowIndex = 1;
+    groupRow.getCell(MAIN_COURSE_FIRST).setCellValue(MAIN_COURSE_TITLE);
+    sheet.addMergedRegion(new CellRangeAddress(0, 0, MAIN_COURSE_FIRST, MAIN_COURSE_LAST));
+
+    int rowIndex = 2;
     for (GuestFoodRowDTO guest : rows) {
       Row row = sheet.createRow(rowIndex++);
       boolean hasAllergy = guest.allergyType() != null;
       var menu = guest.menu();
+      var mainCourse = menu == null ? null : menu.mainCourse();
 
       String[] values = {
-        guest.guestName(),
-        ReportLabels.guestType(guest.isMinor()),
-        ReportLabels.attendance(guest.attendance()),
-        menu == null ? "" : menu.name(),
-        menu == null ? "" : menu.starter(),
-        menu == null ? "" : menu.mainCourse(),
-        menu == null ? "" : menu.dessert(),
-        menu == null ? "" : menu.drink(),
-        hasAllergy ? "Sí" : "No",
-        ReportLabels.allergy(guest),
-        ReportLabels.observations(guest)
+              guest.guestName(),
+              ReportLabels.guestType(guest.isMinor()),
+              ReportLabels.attendance(guest.attendance()),
+              menu == null ? "" : menu.name(),
+              menu == null ? "" : menu.starter(),
+              mainCourse == null ? "" : ReportLabels.text(mainCourse.protein1()),
+              mainCourse == null ? "" : ReportLabels.text(mainCourse.protein2()),
+              mainCourse == null ? "" : ReportLabels.text(mainCourse.accompaniment()),
+              mainCourse == null ? "" : ReportLabels.text(mainCourse.salad()),
+              menu == null ? "" : menu.dessert(),
+              menu == null ? "" : menu.drink(),
+              hasAllergy ? "Sí" : "No",
+              ReportLabels.allergy(guest),
+              ReportLabels.observations(guest)
       };
 
       for (int i = 0; i < values.length; i++) {
@@ -83,8 +112,13 @@ public class FoodExcelExporter {
       }
     }
 
-    sheet.createFreezePane(0, 1);
-    sheet.setAutoFilter(new CellRangeAddress(0, Math.max(rowIndex - 1, 0), 0, HEADERS.length - 1));
+    sheet.createFreezePane(0, 2);
+    // El filtro va sobre la segunda fila del encabezado.
+    sheet.setAutoFilter(new CellRangeAddress(1, Math.max(rowIndex - 1, 1), 0, HEADERS.length - 1));
+  }
+
+  private static boolean isMainCourseColumn(int column) {
+    return column >= MAIN_COURSE_FIRST && column <= MAIN_COURSE_LAST;
   }
 
   private void buildSummarySheet(XSSFWorkbook workbook, Styles styles, FoodSummary summary) {
@@ -104,7 +138,7 @@ public class FoodExcelExporter {
     long total = 0;
     for (MenuCount menu : summary.menuCounts()) {
       r = line(sheet, styles, r, menu.menuName(),
-        ReportLabels.peopleCount(menu.count(), menu.isKids()));
+              ReportLabels.peopleCount(menu.count(), menu.isKids()));
       total += menu.count();
     }
     r = line(sheet, styles, r, "TOTAL", ReportLabels.peopleCount(total, false));

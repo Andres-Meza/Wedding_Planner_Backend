@@ -21,6 +21,11 @@ final class ReportLabels {
     };
   }
 
+  // Los componentes opcionales del plato fuerte pueden venir en null.
+  static String text(String value) {
+    return value == null ? "" : value;
+  }
+
   static String allergy(GuestFoodRowDTO row) {
     return row.allergyType() == null ? "" : row.allergyType().getLabel();
   }
