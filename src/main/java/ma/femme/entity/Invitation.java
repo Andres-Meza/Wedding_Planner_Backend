@@ -2,10 +2,14 @@ package ma.femme.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -16,6 +20,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Invitation {
+
+    // Longitud máxima del mensaje para los novios. La usan la columna, la
+    // validación del DTO público y el servicio, para que no se desincronicen.
+    public static final int COUPLE_MESSAGE_MAX_LENGTH = 1000;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,16 +55,54 @@ public class Invitation {
     @Builder.Default
     private LocalDateTime creationDate = LocalDateTime.now();
 
+    // Mensaje opcional para los novios (texto plano). null = sin mensaje.
+    // Es único por invitación: una persona o toda una familia.
+    @Column(name = "couple_message", length = COUPLE_MESSAGE_MAX_LENGTH)
+    private String coupleMessage;
+
+    // Cuándo se guardó por última vez. Es null si y solo si no hay mensaje.
+    @Column(name = "couple_message_updated_at")
+    private LocalDateTime coupleMessageUpdatedAt;
+
+    // BatchSize evita una consulta por invitación al listar muchas a la vez
+    // (por ejemplo, para contar los invitados de cada mensaje).
     @OneToMany(
             mappedBy = "invitation",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @BatchSize(size = 50)
     @Builder.Default
     private List<Guest> guests = new ArrayList<>();
 
     public void addGuest(Guest guest) {
         guests.add(guest);
         guest.setInvitation(this);
+    }
+
+    /**
+     * La fecha del mensaje como instante absoluto (null si no hay mensaje).
+     * La columna es TIMESTAMP sin zona horaria y se escribe con la hora del
+     * servidor; al exponerla como Instant el navegador la convierte a la hora
+     * local de quien la ve, sin importar en qué zona corra el servidor.
+     */
+    public Instant coupleMessageUpdatedAtInstant() {
+        return coupleMessageUpdatedAt == null
+                ? null
+                : coupleMessageUpdatedAt.atZone(ZoneId.systemDefault()).toInstant();
+    }
+
+    /**
+     * Guarda el mensaje ya normalizado (null = sin mensaje). Si el texto no
+     * cambió no toca la fecha, así un reintento o un reenvío idéntico no
+     * altera la "última actualización". Devuelve true si hubo cambios.
+     */
+    public boolean updateCoupleMessage(String normalizedMessage, LocalDateTime now) {
+        if (Objects.equals(coupleMessage, normalizedMessage)) {
+            return false;
+        }
+        this.coupleMessage = normalizedMessage;
+        this.coupleMessageUpdatedAt = normalizedMessage == null ? null : now;
+        return true;
     }
 }

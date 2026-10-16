@@ -11,10 +11,6 @@ public record GuestAttendanceResponseDTO(
   // null = sin alergias.
   AllergyType allergyType,
   // Observaciones / restricciones alimentarias (texto libre).
-  @Size(max = 200) String dietaryRestriction,
-  // Obligatorio solo cuando attendance = CONFIRMED; se valida en el
-  // servicio (que exista, que esté activo y que sea de la categoría
-  // del invitado: adulto o infantil).
-  Long menuId
+  @Size(max = 200) String dietaryRestriction
 ) {
 }

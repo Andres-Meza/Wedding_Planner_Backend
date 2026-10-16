@@ -12,6 +12,8 @@ public record InvitationResponseDTO(
         InvitationType type,
         String referenceName,
         InvitationStatus status,
-        List<GuestResponseDTO> guests
+        List<GuestResponseDTO> guests,
+        // Mensaje que esta invitación dejó para los novios (null si no hay).
+        String coupleMessage
 ) {
 }

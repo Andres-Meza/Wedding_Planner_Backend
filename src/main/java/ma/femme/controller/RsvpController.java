@@ -3,6 +3,8 @@ package ma.femme.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.AttendanceResponseRequest;
+import ma.femme.dto.CoupleMessageRequest;
+import ma.femme.dto.CoupleMessageResponseDTO;
 import ma.femme.dto.InvitationResponseDTO;
 import ma.femme.dto.MenuResponseDTO;
 import ma.femme.service.InvitationService;
@@ -21,9 +23,12 @@ public class RsvpController {
   private final InvitationService invitationService;
   private final MenuService menuService;
 
-  // Menús activos (adultos e infantiles) — público porque el formulario de
-  // RSVP los necesita para armar los radio buttons. El frontend filtra por
-  // isKids según la categoría de cada invitado.
+  // OBSOLETO: el invitado ya no elige su menú (lo asigna el sistema), así
+  // que el frontend actual no usa este endpoint. Se conserva temporalmente
+  // para que una versión anterior del frontend, que aún lo llame durante el
+  // despliegue, no deje de cargar la invitación. Eliminar en un próximo
+  // release junto con MenuService.listActive().
+  @Deprecated
   @GetMapping("/menu-options")
   public ResponseEntity<List<MenuResponseDTO>> getMenuOptions() {
     return ResponseEntity.ok(menuService.listActive());
@@ -46,5 +51,16 @@ public class RsvpController {
     return ResponseEntity.ok(
         invitationService.respondToAttendance(token, request)
     );
+  }
+
+  // Mensaje opcional para los novios. PUT porque es idempotente: guardar
+  // dos veces lo mismo deja un único mensaje (el de la invitación del
+  // token). Texto vacío lo borra. Va aparte de la asistencia a propósito.
+  @PutMapping("/{token}/message")
+  public ResponseEntity<CoupleMessageResponseDTO> saveMessage(
+      @PathVariable UUID token,
+      @Valid @RequestBody CoupleMessageRequest request) {
+
+    return ResponseEntity.ok(invitationService.saveCoupleMessage(token, request));
   }
 }

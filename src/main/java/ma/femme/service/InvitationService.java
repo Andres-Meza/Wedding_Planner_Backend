@@ -2,6 +2,8 @@ package ma.femme.service;
 
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.AttendanceResponseRequest;
+import ma.femme.dto.CoupleMessageRequest;
+import ma.femme.dto.CoupleMessageResponseDTO;
 import ma.femme.dto.GuestAttendanceResponseDTO;
 import ma.femme.dto.GuestResponseDTO;
 import ma.femme.dto.InvitationResponseDTO;
@@ -11,10 +13,8 @@ import ma.femme.entity.AttendanceStatus;
 import ma.femme.entity.Guest;
 import ma.femme.entity.Invitation;
 import ma.femme.entity.InvitationStatus;
-import ma.femme.entity.Menu;
 import ma.femme.exception.InvitationNotFoundException;
 import ma.femme.repository.InvitationRepository;
-import ma.femme.repository.MenuRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class InvitationService {
 
   private final InvitationRepository invitationRepository;
-  private final MenuRepository menuRepository;
+  private final DefaultMenuService defaultMenuService;
 
   @Transactional(readOnly = true)
   public InvitationResponseDTO getByToken(UUID token) {
@@ -63,12 +63,11 @@ public class InvitationService {
 
       if (response.attendance() == AttendanceStatus.CONFIRMED) {
         validateAllergy(guest, response);
-        guest.setMenu(resolveMenu(guest, response.menuId()));
-      } else {
-        // Si no asiste, cualquier menú que haya quedado guardado de
-        // antes ya no aplica.
-        guest.setMenu(null);
+        ensureMenuAssigned(guest);
       }
+      // El menú ya NO lo elige el invitado: lo asigna el sistema al crear
+      // al invitado. Responder "no asisto" tampoco lo borra; el reporte de
+      // alimentación solo cuenta a los confirmados.
     }
 
     updateOverallStatus(invitation);
@@ -89,34 +88,17 @@ public class InvitationService {
     }
   }
 
-  // Un invitado que confirma asistencia debe elegir un menú existente, de
-  // su categoría (adulto o infantil) y disponible. Si ya lo tenía elegido y
-  // luego lo desactivaron, puede conservarlo al modificar su RSVP.
-  private Menu resolveMenu(Guest guest, Long menuId) {
-    if (menuId == null) {
-      throw new IllegalArgumentException(
-        "Debes elegir un menú para " + guest.getFullName());
+  // Todo invitado nuevo ya nace con su menú por defecto. Esto cubre a los
+  // invitados anteriores que no lo tengan (por ejemplo, si los menús por
+  // defecto aún no existían cuando se aplicó la migración V7): se les asigna
+  // al confirmar. Si ya tienen uno (aunque luego lo hayan desactivado o el
+  // admin lo haya cambiado a mano), se respeta. Si el menú por defecto no
+  // está disponible, lanza DefaultMenuUnavailableException y no se guarda
+  // ninguna respuesta de esta solicitud.
+  private void ensureMenuAssigned(Guest guest) {
+    if (guest.getMenu() == null) {
+      guest.setMenu(defaultMenuService.defaultMenuFor(guest.isMinor()));
     }
-
-    Menu menu = menuRepository.findById(menuId)
-      .orElseThrow(() -> new IllegalArgumentException(
-        "El menú elegido para " + guest.getFullName() + " no existe"));
-
-    if (menu.isKids() != guest.isMinor()) {
-      throw new IllegalArgumentException(
-        "El menú '" + menu.getName() + "' no corresponde a la categoría de "
-          + guest.getFullName());
-    }
-
-    boolean alreadySelected = guest.getMenu() != null
-      && guest.getMenu().getId().equals(menu.getId());
-
-    if (!menu.isActive() && !alreadySelected) {
-      throw new IllegalArgumentException(
-        "El menú '" + menu.getName() + "' ya no está disponible");
-    }
-
-    return menu;
   }
 
   private void updateOverallStatus(Invitation invitation) {
@@ -137,6 +119,31 @@ public class InvitationService {
     }
 
     invitation.setStatus(newStatus);
+  }
+
+  // Guarda (o reemplaza) el mensaje de la invitación para los novios. Es
+  // idempotente: siempre actualiza la misma columna de la misma invitación,
+  // así que reintentos o envíos repetidos no crean duplicados. Un mensaje
+  // vacío lo borra. No toca la asistencia ni los invitados.
+  @Transactional
+  public CoupleMessageResponseDTO saveCoupleMessage(
+    UUID token,
+    CoupleMessageRequest request) {
+
+    Invitation invitation = findByTokenOrThrow(token);
+
+    String message = MessageText.normalize(request.message());
+
+    if (message != null && message.length() > Invitation.COUPLE_MESSAGE_MAX_LENGTH) {
+      throw new IllegalArgumentException(
+        "El mensaje no puede superar los " + Invitation.COUPLE_MESSAGE_MAX_LENGTH + " caracteres");
+    }
+
+    invitation.updateCoupleMessage(message, LocalDateTime.now());
+
+    return new CoupleMessageResponseDTO(
+      invitation.getCoupleMessage(),
+      invitation.coupleMessageUpdatedAtInstant());
   }
 
   private Invitation findByTokenOrThrow(UUID token) {
@@ -164,6 +171,7 @@ public class InvitationService {
       .referenceName(invitation.getReferenceName())
       .status(invitation.getStatus())
       .guests(guests)
+      .coupleMessage(invitation.getCoupleMessage())
       .build();
   }
 }

@@ -20,6 +20,7 @@ import java.util.List;
 public class AdminInvitationService {
 
   private final InvitationRepository invitationRepository;
+  private final DefaultMenuService defaultMenuService;
 
   @Transactional
   public AdminInvitationResponseDTO createInvitation(
@@ -38,9 +39,14 @@ public class AdminInvitationService {
         .build();
 
     for (CreateGuestRequest guestRequest : request.guests()) {
+      // El menú se asigna aquí, en el backend, según la categoría de CADA
+      // invitado (adulto -> Menú 1, menor -> Menú Infantil 1). Si el menú
+      // por defecto no existe o está inactivo se lanza una excepción y la
+      // transacción completa se revierte: no se guarda nada a medias.
       Guest guest = Guest.builder()
           .fullName(guestRequest.fullName())
           .isMinor(guestRequest.isMinor())
+          .menu(defaultMenuService.defaultMenuFor(guestRequest.isMinor()))
           .build();
 
       invitation.addGuest(guest);
@@ -68,6 +74,7 @@ public class AdminInvitationService {
     Guest guest = Guest.builder()
         .fullName(request.fullName())
         .isMinor(request.isMinor())
+        .menu(defaultMenuService.defaultMenuFor(request.isMinor()))
         .build();
 
     invitation.addGuest(guest);

@@ -25,6 +25,13 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
   }
 
+  // El menú por defecto (Menú 1 / Menú Infantil 1) no existe o está inactivo.
+  @ExceptionHandler(DefaultMenuUnavailableException.class)
+  public ResponseEntity<Map<String, Object>> handleDefaultMenuUnavailable(
+      DefaultMenuUnavailableException ex) {
+    return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidArgument(
       IllegalArgumentException ex) {

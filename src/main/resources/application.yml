@@ -26,3 +26,8 @@ app:
   admin:
     username: ${ADMIN_USERNAME}
     password: ${ADMIN_PASSWORD}
+  menus:
+    # Menús que se asignan automáticamente al crear invitados (el nombre debe
+    # coincidir con el de la tabla menu; no distingue mayúsculas).
+    default-adult-name: "Menú 1"
+    default-kids-name: "Menú Infantil 1"
