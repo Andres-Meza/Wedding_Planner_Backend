@@ -4,7 +4,6 @@ import lombok.Builder;
 
 @Builder
 public record MenuOptionDTO(
-        String value,
-        String label
-) {
+    String value,
+    String label) {
 }

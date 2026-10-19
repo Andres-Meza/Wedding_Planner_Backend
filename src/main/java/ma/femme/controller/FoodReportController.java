@@ -1,10 +1,7 @@
 package ma.femme.controller;
 
-import lombok.RequiredArgsConstructor;
-import ma.femme.dto.GuestFoodRowDTO;
-import ma.femme.export.FoodExcelExporter;
-import ma.femme.export.FoodPdfExporter;
-import ma.femme.service.FoodReportService;
+import java.util.List;
+
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,15 +10,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
+import ma.femme.dto.GuestFoodRowDTO;
+import ma.femme.export.FoodExcelExporter;
+import ma.femme.export.FoodPdfExporter;
+import ma.femme.service.FoodReportService;
 
 @RestController
 @RequestMapping("/admin/food-report")
 @RequiredArgsConstructor
 public class FoodReportController {
 
-  private static final MediaType XLSX =
-    MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  private static final MediaType XLSX = MediaType
+      .parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
   private final FoodReportService foodReportService;
   private final FoodExcelExporter excelExporter;
@@ -48,9 +49,9 @@ public class FoodReportController {
 
   private ResponseEntity<byte[]> download(byte[] body, String filename, MediaType type) {
     return ResponseEntity.ok()
-      .contentType(type)
-      .header(HttpHeaders.CONTENT_DISPOSITION,
-        ContentDisposition.attachment().filename(filename).build().toString())
-      .body(body);
+        .contentType(type)
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            ContentDisposition.attachment().filename(filename).build().toString())
+        .body(body);
   }
 }

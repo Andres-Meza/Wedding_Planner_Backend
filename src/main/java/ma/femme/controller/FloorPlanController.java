@@ -1,12 +1,7 @@
 package ma.femme.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import ma.femme.dto.FloorPlanElementDTO;
-import ma.femme.dto.FloorPlanPdfRequest;
-import ma.femme.dto.SaveFloorPlanRequest;
-import ma.femme.service.FloorPlanPdfService;
-import ma.femme.service.FloorPlanService;
+import java.util.List;
+
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,7 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import ma.femme.dto.FloorPlanElementDTO;
+import ma.femme.dto.FloorPlanPdfRequest;
+import ma.femme.dto.SaveFloorPlanRequest;
+import ma.femme.service.FloorPlanPdfService;
+import ma.femme.service.FloorPlanService;
 
 @RestController
 @RequestMapping("/admin/floor-plan")
@@ -44,9 +45,9 @@ public class FloorPlanController {
   public ResponseEntity<byte[]> pdf(@Valid @RequestBody FloorPlanPdfRequest request) {
     byte[] body = floorPlanPdfService.buildPdf(request.imageBase64());
     return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_PDF)
-            .header(HttpHeaders.CONTENT_DISPOSITION,
-                    ContentDisposition.attachment().filename("plano-del-salon.pdf").build().toString())
-            .body(body);
+        .contentType(MediaType.APPLICATION_PDF)
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            ContentDisposition.attachment().filename("plano-del-salon.pdf").build().toString())
+        .body(body);
   }
 }

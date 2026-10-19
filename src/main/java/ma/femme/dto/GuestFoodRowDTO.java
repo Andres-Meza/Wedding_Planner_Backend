@@ -8,13 +8,12 @@ import ma.femme.entity.AttendanceStatus;
 // información de alergias. allergyType == null significa "sin alergias".
 @Builder
 public record GuestFoodRowDTO(
-  Long guestId,
-  String guestName,
-  String invitationName,
-  boolean isMinor,
-  AttendanceStatus attendance,
-  MenuResponseDTO menu,
-  AllergyType allergyType,
-  String dietaryRestriction
-) {
+    Long guestId,
+    String guestName,
+    String invitationName,
+    boolean isMinor,
+    AttendanceStatus attendance,
+    MenuResponseDTO menu,
+    AllergyType allergyType,
+    String dietaryRestriction) {
 }

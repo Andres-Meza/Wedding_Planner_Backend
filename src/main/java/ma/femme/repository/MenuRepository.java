@@ -1,10 +1,11 @@
 package ma.femme.repository;
 
-import ma.femme.entity.Menu;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import ma.femme.entity.Menu;
 
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 

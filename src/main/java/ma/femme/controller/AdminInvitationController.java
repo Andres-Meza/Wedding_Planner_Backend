@@ -1,12 +1,7 @@
 package ma.femme.controller;
 
-import ma.femme.dto.CreateInvitationRequest;
-import ma.femme.dto.CreateGuestRequest;
-import ma.femme.dto.AdminInvitationResponseDTO;
-import ma.femme.service.AdminInvitationService;
-import jakarta.validation.Valid;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import ma.femme.dto.AdminInvitationResponseDTO;
+import ma.femme.dto.CreateGuestRequest;
+import ma.femme.dto.CreateInvitationRequest;
+import ma.femme.service.AdminInvitationService;
+
 // TODO: Protect this controller with authentication (Spring Security)
 // before deploying to production — it remains open for development for now.
 @RestController
@@ -23,30 +25,30 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AdminInvitationController {
 
-    private final AdminInvitationService adminInvitationService;
+  private final AdminInvitationService adminInvitationService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public AdminInvitationResponseDTO create(
-            @Valid @RequestBody CreateInvitationRequest request) {
-        return adminInvitationService.createInvitation(request);
-    }
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public AdminInvitationResponseDTO create(
+      @Valid @RequestBody CreateInvitationRequest request) {
+    return adminInvitationService.createInvitation(request);
+  }
 
-    @GetMapping
-    public List<AdminInvitationResponseDTO> list() {
-        return adminInvitationService.listAll();
-    }
+  @GetMapping
+  public List<AdminInvitationResponseDTO> list() {
+    return adminInvitationService.listAll();
+  }
 
-    @GetMapping("/{id}")
-    public AdminInvitationResponseDTO getById(@PathVariable Long id) {
-        return adminInvitationService.getById(id);
-    }
+  @GetMapping("/{id}")
+  public AdminInvitationResponseDTO getById(@PathVariable Long id) {
+    return adminInvitationService.getById(id);
+  }
 
-    @PostMapping("/{id}/guests")
-    @ResponseStatus(HttpStatus.CREATED)
-    public AdminInvitationResponseDTO addGuest(
-            @PathVariable Long id,
-            @Valid @RequestBody CreateGuestRequest request) {
-        return adminInvitationService.addGuest(id, request);
-    }
+  @PostMapping("/{id}/guests")
+  @ResponseStatus(HttpStatus.CREATED)
+  public AdminInvitationResponseDTO addGuest(
+      @PathVariable Long id,
+      @Valid @RequestBody CreateGuestRequest request) {
+    return adminInvitationService.addGuest(id, request);
+  }
 }

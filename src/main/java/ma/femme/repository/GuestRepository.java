@@ -1,11 +1,12 @@
 package ma.femme.repository;
 
-import ma.femme.entity.AttendanceStatus;
-import ma.femme.entity.Guest;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+import ma.femme.entity.AttendanceStatus;
+import ma.femme.entity.Guest;
 
 public interface GuestRepository extends JpaRepository<Guest, Long> {
 
@@ -21,10 +22,10 @@ public interface GuestRepository extends JpaRepository<Guest, Long> {
   // Todos los invitados con su invitación y menú ya cargados, para el
   // reporte de alimentación (evita N+1 al armar cada fila).
   @Query("""
-    select g from Guest g
-      join fetch g.invitation
-      left join fetch g.menu
-    order by lower(g.fullName)
-    """)
+      select g from Guest g
+        join fetch g.invitation
+        left join fetch g.menu
+      order by lower(g.fullName)
+      """)
   List<Guest> findAllForFoodReport();
 }

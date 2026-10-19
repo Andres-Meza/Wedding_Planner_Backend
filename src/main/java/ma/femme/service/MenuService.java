@@ -1,5 +1,11 @@
 package ma.femme.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.MenuResponseDTO;
 import ma.femme.dto.SaveMainCourseRequest;
@@ -9,11 +15,6 @@ import ma.femme.entity.Menu;
 import ma.femme.exception.MenuInUseException;
 import ma.femme.repository.GuestRepository;
 import ma.femme.repository.MenuRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,16 +27,16 @@ public class MenuService {
   @Transactional(readOnly = true)
   public List<MenuResponseDTO> listAll() {
     return menuRepository.findAllByOrderByKidsAscIdAsc().stream()
-            .map(MenuResponseDTO::fromEntity)
-            .toList();
+        .map(MenuResponseDTO::fromEntity)
+        .toList();
   }
 
   // Solo los menús que se pueden ofrecer hoy — para el formulario de RSVP.
   @Transactional(readOnly = true)
   public List<MenuResponseDTO> listActive() {
     return menuRepository.findByActiveTrueOrderByKidsAscIdAsc().stream()
-            .map(MenuResponseDTO::fromEntity)
-            .toList();
+        .map(MenuResponseDTO::fromEntity)
+        .toList();
   }
 
   @Transactional
@@ -50,13 +51,13 @@ public class MenuService {
     validateMainCourse(mainCourse, request.isKids());
 
     Menu menu = Menu.builder()
-            .name(name)
-            .starter(request.starter().trim())
-            .mainCourse(mainCourse)
-            .dessert(request.dessert().trim())
-            .drink(request.drink().trim())
-            .kids(request.isKids())
-            .build();
+        .name(name)
+        .starter(request.starter().trim())
+        .mainCourse(mainCourse)
+        .dessert(request.dessert().trim())
+        .drink(request.drink().trim())
+        .kids(request.isKids())
+        .build();
 
     return MenuResponseDTO.fromEntity(menuRepository.save(menu));
   }
@@ -74,7 +75,7 @@ public class MenuService {
     // corresponde, así que solo se permite mientras nadie lo haya elegido.
     if (menu.isKids() != request.isKids() && guestRepository.existsByMenuId(id)) {
       throw new IllegalArgumentException(
-              "No puedes cambiar el tipo (adulto/infantil) de un menú que ya tiene invitados asociados");
+          "No puedes cambiar el tipo (adulto/infantil) de un menú que ya tiene invitados asociados");
     }
 
     MainCourse mainCourse = toMainCourse(request.mainCourse());
@@ -110,11 +111,11 @@ public class MenuService {
 
   private MainCourse toMainCourse(SaveMainCourseRequest request) {
     return MainCourse.builder()
-            .protein1(request.protein1().trim())
-            .protein2(blankToNull(request.protein2()))
-            .accompaniment(blankToNull(request.accompaniment()))
-            .salad(blankToNull(request.salad()))
-            .build();
+        .protein1(request.protein1().trim())
+        .protein2(blankToNull(request.protein2()))
+        .accompaniment(blankToNull(request.accompaniment()))
+        .salad(blankToNull(request.salad()))
+        .build();
   }
 
   // Un menú de adultos define el plato fuerte completo (dos proteínas,
@@ -139,8 +140,8 @@ public class MenuService {
 
     if (!missing.isEmpty()) {
       throw new IllegalArgumentException(
-              "El plato fuerte de un menú para adultos debe incluir proteína 1, proteína 2, "
-                      + "acompañamiento y ensalada. Falta: " + String.join(", ", missing));
+          "El plato fuerte de un menú para adultos debe incluir proteína 1, proteína 2, "
+              + "acompañamiento y ensalada. Falta: " + String.join(", ", missing));
     }
   }
 
@@ -153,6 +154,6 @@ public class MenuService {
 
   private Menu findOrThrow(Long id) {
     return menuRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("No existe un menú con id " + id));
+        .orElseThrow(() -> new IllegalArgumentException("No existe un menú con id " + id));
   }
 }

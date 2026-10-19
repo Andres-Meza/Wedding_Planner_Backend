@@ -15,22 +15,17 @@
 -- Esta migración es solo aditiva: no borra datos ni toca guest.menu_id.
 
 ALTER TABLE menu
-  ADD COLUMN protein_1      VARCHAR(200),
-  ADD COLUMN protein_2      VARCHAR(200),
-  ADD COLUMN accompaniment  VARCHAR(200),
-  ADD COLUMN salad          VARCHAR(200);
+ADD COLUMN protein_1 VARCHAR(200),
+ADD COLUMN protein_2 VARCHAR(200),
+ADD COLUMN accompaniment VARCHAR(200),
+ADD COLUMN salad VARCHAR(200);
 
-UPDATE menu
-SET protein_1 = main_course;
+UPDATE menu SET protein_1 = main_course;
 
-ALTER TABLE menu
-  ALTER COLUMN protein_1 SET NOT NULL;
+ALTER TABLE menu ALTER COLUMN protein_1 SET NOT NULL;
 
-ALTER TABLE menu
-  RENAME COLUMN main_course TO legacy_main_course;
+ALTER TABLE menu RENAME COLUMN main_course TO legacy_main_course;
 
-ALTER TABLE menu
-  ALTER COLUMN legacy_main_course DROP NOT NULL;
+ALTER TABLE menu ALTER COLUMN legacy_main_course DROP NOT NULL;
 
-COMMENT ON COLUMN menu.legacy_main_course IS
-  'Respaldo del plato fuerte original (antes de V5). Ya no lo usa la aplicación; se puede eliminar en una migración futura cuando todos los menús estén revisados.';
+COMMENT ON COLUMN menu.legacy_main_course IS 'Respaldo del plato fuerte original (antes de V5). Ya no lo usa la aplicación; se puede eliminar en una migración futura cuando todos los menús estén revisados.';

@@ -1,17 +1,18 @@
 package ma.femme.service;
 
-import ma.femme.entity.Menu;
-import ma.femme.exception.DefaultMenuUnavailableException;
-import ma.femme.repository.MenuRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import ma.femme.entity.Menu;
+import ma.femme.exception.DefaultMenuUnavailableException;
+import ma.femme.repository.MenuRepository;
 
 class DefaultMenuServiceTest {
 
@@ -45,19 +46,19 @@ class DefaultMenuServiceTest {
     when(menuRepository.findByNameIgnoreCaseAndKids("Menú 1", false)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.defaultMenuFor(false))
-      .isInstanceOf(DefaultMenuUnavailableException.class)
-      .hasMessageContaining("Menú 1")
-      .hasMessageContaining("No existe");
+        .isInstanceOf(DefaultMenuUnavailableException.class)
+        .hasMessageContaining("Menú 1")
+        .hasMessageContaining("No existe");
   }
 
   @Test
   void inactiveMenuIsReported() {
     when(menuRepository.findByNameIgnoreCaseAndKids("Menú Infantil 1", true))
-      .thenReturn(Optional.of(menu(2L, "Menú Infantil 1", true, false)));
+        .thenReturn(Optional.of(menu(2L, "Menú Infantil 1", true, false)));
 
     assertThatThrownBy(() -> service.defaultMenuFor(true))
-      .isInstanceOf(DefaultMenuUnavailableException.class)
-      .hasMessageContaining("inactivo");
+        .isInstanceOf(DefaultMenuUnavailableException.class)
+        .hasMessageContaining("inactivo");
   }
 
   static Menu menu(Long id, String name, boolean kids, boolean active) {

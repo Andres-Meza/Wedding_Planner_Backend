@@ -6,7 +6,6 @@ import java.util.List;
 
 @Builder
 public record MenuCatalogDTO(
-        List<MenuOptionDTO> adultOptions,
-        List<MenuOptionDTO> kidsOptions
-) {
+    List<MenuOptionDTO> adultOptions,
+    List<MenuOptionDTO> kidsOptions) {
 }

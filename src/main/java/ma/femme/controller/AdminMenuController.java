@@ -1,11 +1,7 @@
 package ma.femme.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import ma.femme.dto.MenuResponseDTO;
-import ma.femme.dto.SaveMenuRequest;
-import ma.femme.dto.UpdateMenuStatusRequest;
-import ma.femme.service.MenuService;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import ma.femme.dto.MenuResponseDTO;
+import ma.femme.dto.SaveMenuRequest;
+import ma.femme.dto.UpdateMenuStatusRequest;
+import ma.femme.service.MenuService;
 
 @RestController
 @RequestMapping("/admin/menus")
@@ -40,15 +41,15 @@ public class AdminMenuController {
 
   @PutMapping("/{id}")
   public MenuResponseDTO update(
-    @PathVariable Long id,
-    @Valid @RequestBody SaveMenuRequest request) {
+      @PathVariable Long id,
+      @Valid @RequestBody SaveMenuRequest request) {
     return menuService.update(id, request);
   }
 
   @PatchMapping("/{id}/active")
   public MenuResponseDTO setActive(
-    @PathVariable Long id,
-    @Valid @RequestBody UpdateMenuStatusRequest request) {
+      @PathVariable Long id,
+      @Valid @RequestBody UpdateMenuStatusRequest request) {
     return menuService.setActive(id, request.active());
   }
 

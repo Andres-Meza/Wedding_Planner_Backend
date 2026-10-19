@@ -1,9 +1,10 @@
 package ma.femme.export;
 
-import ma.femme.dto.GuestFoodRowDTO;
-import ma.femme.service.FoodReportService.AllergyCount;
-import ma.femme.service.FoodReportService.FoodSummary;
-import ma.femme.service.FoodReportService.MenuCount;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.List;
+
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
@@ -14,10 +15,10 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.List;
+import ma.femme.dto.GuestFoodRowDTO;
+import ma.femme.service.FoodReportService.AllergyCount;
+import ma.femme.service.FoodReportService.FoodSummary;
+import ma.femme.service.FoodReportService.MenuCount;
 
 @Component
 public class FoodExcelExporter {
@@ -26,9 +27,9 @@ public class FoodExcelExporter {
   // consecutivas (de MAIN_COURSE_FIRST a MAIN_COURSE_LAST) que se agrupan
   // bajo un encabezado combinado "Plato fuerte".
   private static final String[] HEADERS = {
-          "Invitado", "Tipo", "Asistencia", "Menú", "Entrada",
-          "Proteína 1", "Proteína 2", "Acompañamiento", "Ensalada",
-          "Postre", "Bebida", "Tiene alergia", "Alergia", "Observaciones"
+      "Invitado", "Tipo", "Asistencia", "Menú", "Entrada",
+      "Proteína 1", "Proteína 2", "Acompañamiento", "Ensalada",
+      "Postre", "Bebida", "Tiene alergia", "Alergia", "Observaciones"
   };
 
   private static final int MAIN_COURSE_FIRST = 5;
@@ -37,11 +38,11 @@ public class FoodExcelExporter {
 
   // Anchos en caracteres. Fijos a propósito: autoSizeColumn necesita fuentes
   // del sistema (AWT) y falla en contenedores mínimos como el de Railway.
-  private static final int[] WIDTHS = {28, 10, 15, 18, 24, 22, 22, 20, 20, 20, 18, 14, 16, 40};
+  private static final int[] WIDTHS = { 28, 10, 15, 18, 24, 22, 22, 20, 20, 20, 18, 14, 16, 40 };
 
   public byte[] export(List<GuestFoodRowDTO> rows, FoodSummary summary) {
     try (XSSFWorkbook workbook = new XSSFWorkbook();
-         ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
       Styles styles = new Styles(workbook);
       buildGuestSheet(workbook, styles, rows);
@@ -89,20 +90,20 @@ public class FoodExcelExporter {
       var mainCourse = menu == null ? null : menu.mainCourse();
 
       String[] values = {
-              guest.guestName(),
-              ReportLabels.guestType(guest.isMinor()),
-              ReportLabels.attendance(guest.attendance()),
-              menu == null ? "" : menu.name(),
-              menu == null ? "" : menu.starter(),
-              mainCourse == null ? "" : ReportLabels.text(mainCourse.protein1()),
-              mainCourse == null ? "" : ReportLabels.text(mainCourse.protein2()),
-              mainCourse == null ? "" : ReportLabels.text(mainCourse.accompaniment()),
-              mainCourse == null ? "" : ReportLabels.text(mainCourse.salad()),
-              menu == null ? "" : menu.dessert(),
-              menu == null ? "" : menu.drink(),
-              hasAllergy ? "Sí" : "No",
-              ReportLabels.allergy(guest),
-              ReportLabels.observations(guest)
+          guest.guestName(),
+          ReportLabels.guestType(guest.isMinor()),
+          ReportLabels.attendance(guest.attendance()),
+          menu == null ? "" : menu.name(),
+          menu == null ? "" : menu.starter(),
+          mainCourse == null ? "" : ReportLabels.text(mainCourse.protein1()),
+          mainCourse == null ? "" : ReportLabels.text(mainCourse.protein2()),
+          mainCourse == null ? "" : ReportLabels.text(mainCourse.accompaniment()),
+          mainCourse == null ? "" : ReportLabels.text(mainCourse.salad()),
+          menu == null ? "" : menu.dessert(),
+          menu == null ? "" : menu.drink(),
+          hasAllergy ? "Sí" : "No",
+          ReportLabels.allergy(guest),
+          ReportLabels.observations(guest)
       };
 
       for (int i = 0; i < values.length; i++) {
@@ -138,7 +139,7 @@ public class FoodExcelExporter {
     long total = 0;
     for (MenuCount menu : summary.menuCounts()) {
       r = line(sheet, styles, r, menu.menuName(),
-              ReportLabels.peopleCount(menu.count(), menu.isKids()));
+          ReportLabels.peopleCount(menu.count(), menu.isKids()));
       total += menu.count();
     }
     r = line(sheet, styles, r, "TOTAL", ReportLabels.peopleCount(total, false));

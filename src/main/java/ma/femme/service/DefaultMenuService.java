@@ -1,10 +1,11 @@
 package ma.femme.service;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import ma.femme.entity.Menu;
 import ma.femme.exception.DefaultMenuUnavailableException;
 import ma.femme.repository.MenuRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 // Decide qué menú recibe un invitado automáticamente:
 //   adulto -> "Menú 1"          menor -> "Menú Infantil 1"
@@ -19,9 +20,9 @@ public class DefaultMenuService {
   private final String kidsMenuName;
 
   public DefaultMenuService(
-    MenuRepository menuRepository,
-    @Value("${app.menus.default-adult-name:Menú 1}") String adultMenuName,
-    @Value("${app.menus.default-kids-name:Menú Infantil 1}") String kidsMenuName) {
+      MenuRepository menuRepository,
+      @Value("${app.menus.default-adult-name:Menú 1}") String adultMenuName,
+      @Value("${app.menus.default-kids-name:Menú Infantil 1}") String kidsMenuName) {
     this.menuRepository = menuRepository;
     this.adultMenuName = adultMenuName;
     this.kidsMenuName = kidsMenuName;
@@ -34,14 +35,14 @@ public class DefaultMenuService {
     String category = minor ? "infantil" : "de adultos";
 
     Menu menu = menuRepository.findByNameIgnoreCaseAndKids(name, minor)
-      .orElseThrow(() -> new DefaultMenuUnavailableException(
-        "No existe el menú " + category + " predeterminado '" + name
-          + "'. Créalo en la sección Menús antes de registrar invitados."));
+        .orElseThrow(() -> new DefaultMenuUnavailableException(
+            "No existe el menú " + category + " predeterminado '" + name
+                + "'. Créalo en la sección Menús antes de registrar invitados."));
 
     if (!menu.isActive()) {
       throw new DefaultMenuUnavailableException(
-        "El menú " + category + " predeterminado '" + name
-          + "' está inactivo. Actívalo en la sección Menús antes de registrar invitados.");
+          "El menú " + category + " predeterminado '" + name
+              + "' está inactivo. Actívalo en la sección Menús antes de registrar invitados.");
     }
 
     return menu;

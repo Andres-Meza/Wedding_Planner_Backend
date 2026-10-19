@@ -21,12 +21,14 @@
 -- mayúsculas de minúsculas.
 
 UPDATE guest g
-SET menu_id = m.id
+SET
+    menu_id = m.id
 FROM menu m
-WHERE g.menu_id IS NULL
-  AND m.active = TRUE
-  AND m.is_kids = g.is_minor
-  AND lower(m.name) = CASE
-                        WHEN g.is_minor THEN lower('Menú Infantil 1')
-                        ELSE lower('Menú 1')
-                      END;
+WHERE
+    g.menu_id IS NULL
+    AND m.active = TRUE
+    AND m.is_kids = g.is_minor
+    AND lower(m.name) = CASE
+        WHEN g.is_minor THEN lower('Menú Infantil 1')
+        ELSE lower('Menú 1')
+    END;

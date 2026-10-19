@@ -10,14 +10,13 @@ import ma.femme.entity.FloorPlanElementKind;
 // (Bean Validation no cubre bien los números decimales).
 @Builder
 public record FloorPlanElementDTO(
-  Long id,
-  @NotNull FloorPlanElementKind kind,
-  double x,
-  double y,
-  double width,
-  double height,
-  double rotation,
-  @Size(max = 100) String label,
-  Long tableId
-) {
+    Long id,
+    @NotNull FloorPlanElementKind kind,
+    double x,
+    double y,
+    double width,
+    double height,
+    double rotation,
+    @Size(max = 100) String label,
+    Long tableId) {
 }

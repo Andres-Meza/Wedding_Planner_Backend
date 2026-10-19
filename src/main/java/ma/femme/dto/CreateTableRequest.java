@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateTableRequest(
-        @NotBlank String nameOrNumber,
-        @NotNull @Min(1) Integer capacity,
-        String zone
-) {
+    @NotBlank String nameOrNumber,
+    @NotNull @Min(1) Integer capacity,
+    String zone) {
 }

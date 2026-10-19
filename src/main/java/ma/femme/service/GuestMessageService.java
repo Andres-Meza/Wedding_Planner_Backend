@@ -1,5 +1,17 @@
 package ma.femme.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -11,17 +23,6 @@ import ma.femme.entity.Guest;
 import ma.femme.entity.Invitation;
 import ma.femme.entity.InvitationType;
 import ma.femme.repository.InvitationRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 // Consulta administrativa de los mensajes que dejaron los invitados.
 // Solo se llama desde /admin/** (protegido con rol ADMIN).
@@ -36,34 +37,34 @@ public class GuestMessageService {
 
   @Transactional(readOnly = true)
   public GuestMessagePageDTO list(
-    int page,
-    int size,
-    String search,
-    InvitationType type,
-    GuestMessageFilter filter) {
+      int page,
+      int size,
+      String search,
+      InvitationType type,
+      GuestMessageFilter filter) {
 
     GuestMessageFilter effectiveFilter = filter == null ? GuestMessageFilter.WITH_MESSAGE : filter;
     Pageable pageable = PageRequest.of(
-      Math.max(page, 0),
-      clampSize(size),
-      sortFor(effectiveFilter));
+        Math.max(page, 0),
+        clampSize(size),
+        sortFor(effectiveFilter));
 
     Page<Invitation> result = invitationRepository.findAll(
-      buildSpecification(search, type, effectiveFilter),
-      pageable);
+        buildSpecification(search, type, effectiveFilter),
+        pageable);
 
     long total = invitationRepository.count();
     long withMessage = invitationRepository.countByCoupleMessageIsNotNull();
 
     return new GuestMessagePageDTO(
-      result.getContent().stream().map(GuestMessageDTO::fromEntity).toList(),
-      result.getNumber(),
-      result.getSize(),
-      result.getTotalElements(),
-      result.getTotalPages(),
-      total,
-      withMessage,
-      total - withMessage);
+        result.getContent().stream().map(GuestMessageDTO::fromEntity).toList(),
+        result.getNumber(),
+        result.getSize(),
+        result.getTotalElements(),
+        result.getTotalPages(),
+        total,
+        withMessage,
+        total - withMessage);
   }
 
   private int clampSize(int size) {
@@ -78,18 +79,18 @@ public class GuestMessageService {
   private Sort sortFor(GuestMessageFilter filter) {
     if (filter == GuestMessageFilter.WITH_MESSAGE) {
       return Sort.by(
-        Sort.Order.desc("coupleMessageUpdatedAt"),
-        Sort.Order.desc("id"));
+          Sort.Order.desc("coupleMessageUpdatedAt"),
+          Sort.Order.desc("id"));
     }
     return Sort.by(
-      Sort.Order.desc("creationDate"),
-      Sort.Order.desc("id"));
+        Sort.Order.desc("creationDate"),
+        Sort.Order.desc("id"));
   }
 
   private Specification<Invitation> buildSpecification(
-    String search,
-    InvitationType type,
-    GuestMessageFilter filter) {
+      String search,
+      InvitationType type,
+      GuestMessageFilter filter) {
 
     String pattern = likePattern(search);
 
@@ -97,8 +98,8 @@ public class GuestMessageService {
       List<Predicate> predicates = new ArrayList<>();
 
       predicates.add(filter == GuestMessageFilter.WITH_MESSAGE
-        ? cb.isNotNull(root.get("coupleMessage"))
-        : cb.isNull(root.get("coupleMessage")));
+          ? cb.isNotNull(root.get("coupleMessage"))
+          : cb.isNull(root.get("coupleMessage")));
 
       if (type != null) {
         predicates.add(cb.equal(root.get("type"), type));
@@ -110,13 +111,13 @@ public class GuestMessageService {
         Subquery<Long> guestMatch = query.subquery(Long.class);
         Root<Guest> guest = guestMatch.from(Guest.class);
         guestMatch.select(guest.<Long>get("id")).where(
-          cb.equal(guest.get("invitation"), root),
-          cb.like(cb.lower(guest.get("fullName")), pattern, '\\'));
+            cb.equal(guest.get("invitation"), root),
+            cb.like(cb.lower(guest.get("fullName")), pattern, '\\'));
 
         predicates.add(cb.or(
-          cb.like(cb.lower(root.get("referenceName")), pattern, '\\'),
-          cb.like(cb.lower(root.get("coupleMessage")), pattern, '\\'),
-          cb.exists(guestMatch)));
+            cb.like(cb.lower(root.get("referenceName")), pattern, '\\'),
+            cb.like(cb.lower(root.get("coupleMessage")), pattern, '\\'),
+            cb.exists(guestMatch)));
       }
 
       return cb.and(predicates.toArray(Predicate[]::new));
@@ -130,9 +131,9 @@ public class GuestMessageService {
       return null;
     }
     String escaped = search.strip().toLowerCase(Locale.ROOT)
-      .replace("\\", "\\\\")
-      .replace("%", "\\%")
-      .replace("_", "\\_");
+        .replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_");
     return "%" + escaped + "%";
   }
 }

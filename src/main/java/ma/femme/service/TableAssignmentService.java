@@ -1,5 +1,14 @@
 package ma.femme.service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.AssignedGuestDTO;
 import ma.femme.dto.AssignmentResultDTO;
@@ -12,255 +21,238 @@ import ma.femme.entity.TableWedding;
 import ma.femme.repository.GuestRepository;
 import ma.femme.repository.TableAssignmentRepository;
 import ma.femme.repository.TableWeddingRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TableAssignmentService {
 
-    private final TableWeddingRepository tableRepository;
-    private final GuestRepository guestRepository;
-    private final TableAssignmentRepository tableAssignmentRepository;
+  private final TableWeddingRepository tableRepository;
+  private final GuestRepository guestRepository;
+  private final TableAssignmentRepository tableAssignmentRepository;
 
-    /**
-     * Assigns a table to all guests who confirmed their attendance and do not
-     * have a table yet. Groups guests by invitation (attempts to seat each
-     * family together at a single table); if a group does not fit completely
-     * at any available table, it distributes the guests by filling tables
-     * one available spot at a time.
-     * Guests who already have a table are not reassigned — use the manual
-     * endpoint for that.
-     */
-    @Transactional
-    public AssignmentResultDTO assignAutomatically() {
+  /**
+   * Assigns a table to all guests who confirmed their attendance and do not
+   * have a table yet. Groups guests by invitation (attempts to seat each
+   * family together at a single table); if a group does not fit completely
+   * at any available table, it distributes the guests by filling tables
+   * one available spot at a time.
+   * Guests who already have a table are not reassigned — use the manual
+   * endpoint for that.
+   */
+  @Transactional
+  public AssignmentResultDTO assignAutomatically() {
 
-        List<TableCapacity> tablesWithAvailableCapacity =
-                loadTablesWithAvailableCapacity();
+    List<TableCapacity> tablesWithAvailableCapacity = loadTablesWithAvailableCapacity();
 
-        List<Guest> confirmedGuestsWithoutTable = guestRepository
-                .findByAttendance(AttendanceStatus.CONFIRMED).stream()
-                .filter(guest ->
-                        !tableAssignmentRepository.existsByGuestId(guest.getId()))
-                .toList();
+    List<Guest> confirmedGuestsWithoutTable = guestRepository
+        .findByAttendance(AttendanceStatus.CONFIRMED).stream()
+        .filter(guest -> !tableAssignmentRepository.existsByGuestId(guest.getId()))
+        .toList();
 
-        // Group by invitation and sort the largest groups first:
-        // this places larger families first, which are harder to fit,
-        // leaving smaller spaces for the end.
-        Map<Long, List<Guest>> groupsByInvitation =
-                confirmedGuestsWithoutTable.stream()
-                        .collect(Collectors.groupingBy(
-                                guest -> guest.getInvitation().getId()));
+    // Group by invitation and sort the largest groups first:
+    // this places larger families first, which are harder to fit,
+    // leaving smaller spaces for the end.
+    Map<Long, List<Guest>> groupsByInvitation = confirmedGuestsWithoutTable.stream()
+        .collect(Collectors.groupingBy(
+            guest -> guest.getInvitation().getId()));
 
-        List<List<Guest>> sortedGroups = groupsByInvitation.values().stream()
-                .sorted(Comparator.comparingInt(List<Guest>::size).reversed())
-                .toList();
+    List<List<Guest>> sortedGroups = groupsByInvitation.values().stream()
+        .sorted(Comparator.comparingInt(List<Guest>::size).reversed())
+        .toList();
 
-        List<TableAssignment> newAssignments = new ArrayList<>();
-        List<String> unassignedGuests = new ArrayList<>();
+    List<TableAssignment> newAssignments = new ArrayList<>();
+    List<String> unassignedGuests = new ArrayList<>();
 
-        for (List<Guest> group : sortedGroups) {
+    for (List<Guest> group : sortedGroups) {
 
-            TableCapacity tableForCompleteGroup =
-                    findTableWithCapacityFor(
-                            tablesWithAvailableCapacity,
-                            group.size());
+      TableCapacity tableForCompleteGroup = findTableWithCapacityFor(
+          tablesWithAvailableCapacity,
+          group.size());
 
-            if (tableForCompleteGroup != null) {
+      if (tableForCompleteGroup != null) {
 
-                for (Guest guest : group) {
-                    newAssignments.add(
-                            createAssignment(
-                                    guest,
-                                    tableForCompleteGroup.table,
-                                    false));
+        for (Guest guest : group) {
+          newAssignments.add(
+              createAssignment(
+                  guest,
+                  tableForCompleteGroup.table,
+                  false));
 
-                    tableForCompleteGroup.remainingCapacity--;
-                }
-
-            } else {
-
-                // The entire family does not fit together: distribute each guest
-                // individually into the first available spot.
-                for (Guest guest : group) {
-
-                    TableCapacity availableCapacity =
-                            findTableWithCapacityFor(
-                                    tablesWithAvailableCapacity,
-                                    1);
-
-                    if (availableCapacity == null) {
-                        unassignedGuests.add(guest.getFullName());
-                        continue;
-                    }
-
-                    newAssignments.add(
-                            createAssignment(
-                                    guest,
-                                    availableCapacity.table,
-                                    false));
-
-                    availableCapacity.remainingCapacity--;
-                }
-            }
+          tableForCompleteGroup.remainingCapacity--;
         }
 
-        tableAssignmentRepository.saveAll(newAssignments);
+      } else {
 
-        return AssignmentResultDTO.builder()
-                .totalAssigned(newAssignments.size())
-                .totalUnassigned(unassignedGuests.size())
-                .unassignedGuests(unassignedGuests)
-                .build();
+        // The entire family does not fit together: distribute each guest
+        // individually into the first available spot.
+        for (Guest guest : group) {
+
+          TableCapacity availableCapacity = findTableWithCapacityFor(
+              tablesWithAvailableCapacity,
+              1);
+
+          if (availableCapacity == null) {
+            unassignedGuests.add(guest.getFullName());
+            continue;
+          }
+
+          newAssignments.add(
+              createAssignment(
+                  guest,
+                  availableCapacity.table,
+                  false));
+
+          availableCapacity.remainingCapacity--;
+        }
+      }
     }
 
-    @Transactional
-    public void assignManually(ManualAssignmentRequest request) {
+    tableAssignmentRepository.saveAll(newAssignments);
 
-        Guest guest = guestRepository.findById(request.guestId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No guest exists with id " + request.guestId()));
+    return AssignmentResultDTO.builder()
+        .totalAssigned(newAssignments.size())
+        .totalUnassigned(unassignedGuests.size())
+        .unassignedGuests(unassignedGuests)
+        .build();
+  }
 
-        TableWedding table = tableRepository.findById(request.tableId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No table exists with id " + request.tableId()));
+  @Transactional
+  public void assignManually(ManualAssignmentRequest request) {
 
-        // Si el invitado ya tiene asignación se actualiza esa misma fila (no
-        // se borra y se crea otra): así mover a alguien de silla dentro de
-        // una mesa llena no falla, y no se choca con el UNIQUE de guest_id.
-        TableAssignment assignment = tableAssignmentRepository
-                .findByGuestId(guest.getId())
-                .orElse(null);
+    Guest guest = guestRepository.findById(request.guestId())
+        .orElseThrow(() -> new IllegalArgumentException(
+            "No guest exists with id " + request.guestId()));
 
-        boolean alreadyAtThisTable = assignment != null
-                && assignment.getTableWedding().getId().equals(table.getId());
+    TableWedding table = tableRepository.findById(request.tableId())
+        .orElseThrow(() -> new IllegalArgumentException(
+            "No table exists with id " + request.tableId()));
 
-        if (!alreadyAtThisTable) {
-            long occupiedSpots =
-                    tableAssignmentRepository.countByTableWeddingId(table.getId());
+    // Si el invitado ya tiene asignación se actualiza esa misma fila (no
+    // se borra y se crea otra): así mover a alguien de silla dentro de
+    // una mesa llena no falla, y no se choca con el UNIQUE de guest_id.
+    TableAssignment assignment = tableAssignmentRepository
+        .findByGuestId(guest.getId())
+        .orElse(null);
 
-            if (occupiedSpots >= table.getCapacity()) {
-                throw new IllegalArgumentException(
-                        "Table '" + table.getNameOrNumber() + "' is already full");
-            }
-        }
+    boolean alreadyAtThisTable = assignment != null
+        && assignment.getTableWedding().getId().equals(table.getId());
 
-        Integer seatIndex = request.seatIndex();
+    if (!alreadyAtThisTable) {
+      long occupiedSpots = tableAssignmentRepository.countByTableWeddingId(table.getId());
 
-        if (seatIndex != null) {
-            if (seatIndex >= table.getCapacity()) {
-                throw new IllegalArgumentException(
-                        "Table '" + table.getNameOrNumber() + "' has no seat " + (seatIndex + 1));
-            }
-
-            if (tableAssignmentRepository.existsByTableWeddingIdAndSeatIndexAndGuestIdNot(
-                    table.getId(), seatIndex, guest.getId())) {
-                throw new IllegalArgumentException(
-                        "Seat " + (seatIndex + 1) + " at table '"
-                                + table.getNameOrNumber() + "' is already taken");
-            }
-        }
-
-        if (assignment == null) {
-            assignment = createAssignment(guest, table, true);
-        }
-
-        assignment.setTableWedding(table);
-        assignment.setSeatIndex(seatIndex);
-        assignment.setManuallyAssigned(true);
-
-        tableAssignmentRepository.save(assignment);
+      if (occupiedSpots >= table.getCapacity()) {
+        throw new IllegalArgumentException(
+            "Table '" + table.getNameOrNumber() + "' is already full");
+      }
     }
 
-    @Transactional
-    public void removeAssignment(Long guestId) {
-        tableAssignmentRepository.deleteByGuestId(guestId);
+    Integer seatIndex = request.seatIndex();
+
+    if (seatIndex != null) {
+      if (seatIndex >= table.getCapacity()) {
+        throw new IllegalArgumentException(
+            "Table '" + table.getNameOrNumber() + "' has no seat " + (seatIndex + 1));
+      }
+
+      if (tableAssignmentRepository.existsByTableWeddingIdAndSeatIndexAndGuestIdNot(
+          table.getId(), seatIndex, guest.getId())) {
+        throw new IllegalArgumentException(
+            "Seat " + (seatIndex + 1) + " at table '"
+                + table.getNameOrNumber() + "' is already taken");
+      }
     }
 
-    @Transactional(readOnly = true)
-    public List<TableWithGuestsDTO> getTableLayout() {
+    if (assignment == null) {
+      assignment = createAssignment(guest, table, true);
+    }
 
-        return tableRepository.findAll().stream()
-                .map(table -> TableWithGuestsDTO.builder()
-                        .tableId(table.getId())
-                        .nameOrNumber(table.getNameOrNumber())
-                        .capacity(table.getCapacity())
-                        .guests(
-                                tableAssignmentRepository.findByTableWeddingId(table.getId()).stream()
-                                        .map(assignment -> AssignedGuestDTO.builder()
-                                                .guestId(assignment.getGuest().getId())
-                                                .fullName(assignment.getGuest().getFullName())
-                                                .seatIndex(assignment.getSeatIndex())
-                                                .build())
-                                        .toList())
+    assignment.setTableWedding(table);
+    assignment.setSeatIndex(seatIndex);
+    assignment.setManuallyAssigned(true);
+
+    tableAssignmentRepository.save(assignment);
+  }
+
+  @Transactional
+  public void removeAssignment(Long guestId) {
+    tableAssignmentRepository.deleteByGuestId(guestId);
+  }
+
+  @Transactional(readOnly = true)
+  public List<TableWithGuestsDTO> getTableLayout() {
+
+    return tableRepository.findAll().stream()
+        .map(table -> TableWithGuestsDTO.builder()
+            .tableId(table.getId())
+            .nameOrNumber(table.getNameOrNumber())
+            .capacity(table.getCapacity())
+            .guests(
+                tableAssignmentRepository.findByTableWeddingId(table.getId()).stream()
+                    .map(assignment -> AssignedGuestDTO.builder()
+                        .guestId(assignment.getGuest().getId())
+                        .fullName(assignment.getGuest().getFullName())
+                        .seatIndex(assignment.getSeatIndex())
                         .build())
-                .toList();
+                    .toList())
+            .build())
+        .toList();
+  }
+
+  private List<TableCapacity> loadTablesWithAvailableCapacity() {
+
+    List<TableCapacity> result = new ArrayList<>();
+
+    for (TableWedding table : tableRepository.findAll()) {
+
+      long occupiedSpots = tableAssignmentRepository.countByTableWeddingId(table.getId());
+
+      int availableSpots = table.getCapacity() - (int) occupiedSpots;
+
+      if (availableSpots > 0) {
+        result.add(new TableCapacity(table, availableSpots));
+      }
     }
 
-    private List<TableCapacity> loadTablesWithAvailableCapacity() {
+    return result;
+  }
 
-        List<TableCapacity> result = new ArrayList<>();
+  private TableCapacity findTableWithCapacityFor(
+      List<TableCapacity> tablesWithCapacity,
+      int requiredSpots) {
 
-        for (TableWedding table : tableRepository.findAll()) {
+    return tablesWithCapacity.stream()
+        .filter(capacity -> capacity.remainingCapacity >= requiredSpots)
+        .min(Comparator.comparingInt(
+            capacity -> capacity.remainingCapacity))
+        .orElse(null);
+  }
 
-            long occupiedSpots =
-                    tableAssignmentRepository.countByTableWeddingId(table.getId());
+  private TableAssignment createAssignment(
+      Guest guest,
+      TableWedding table,
+      boolean manual) {
 
-            int availableSpots =
-                    table.getCapacity() - (int) occupiedSpots;
+    return TableAssignment.builder()
+        .guest(guest)
+        .tableWedding(table)
+        .manuallyAssigned(manual)
+        .build();
+  }
 
-            if (availableSpots > 0) {
-                result.add(new TableCapacity(table, availableSpots));
-            }
-        }
+  /**
+   * Mutable in-memory state for the remaining capacity of a table
+   * during the assignment algorithm.
+   */
+  private static final class TableCapacity {
 
-        return result;
+    private final TableWedding table;
+    private int remainingCapacity;
+
+    private TableCapacity(
+        TableWedding table,
+        int remainingCapacity) {
+      this.table = table;
+      this.remainingCapacity = remainingCapacity;
     }
-
-    private TableCapacity findTableWithCapacityFor(
-            List<TableCapacity> tablesWithCapacity,
-            int requiredSpots) {
-
-        return tablesWithCapacity.stream()
-                .filter(capacity ->
-                        capacity.remainingCapacity >= requiredSpots)
-                .min(Comparator.comparingInt(
-                        capacity -> capacity.remainingCapacity))
-                .orElse(null);
-    }
-
-    private TableAssignment createAssignment(
-            Guest guest,
-            TableWedding table,
-            boolean manual) {
-
-        return TableAssignment.builder()
-                .guest(guest)
-                .tableWedding(table)
-                .manuallyAssigned(manual)
-                .build();
-    }
-
-    /**
-     * Mutable in-memory state for the remaining capacity of a table
-     * during the assignment algorithm.
-     */
-    private static final class TableCapacity {
-
-        private final TableWedding table;
-        private int remainingCapacity;
-
-        private TableCapacity(
-                TableWedding table,
-                int remainingCapacity) {
-            this.table = table;
-            this.remainingCapacity = remainingCapacity;
-        }
-    }
+  }
 }

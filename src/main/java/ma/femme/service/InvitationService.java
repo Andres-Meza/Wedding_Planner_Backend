@@ -1,5 +1,14 @@
 package ma.femme.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.AttendanceResponseRequest;
 import ma.femme.dto.CoupleMessageRequest;
@@ -15,14 +24,6 @@ import ma.femme.entity.Invitation;
 import ma.femme.entity.InvitationStatus;
 import ma.femme.exception.InvitationNotFoundException;
 import ma.femme.repository.InvitationRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,20 +40,20 @@ public class InvitationService {
 
   @Transactional
   public InvitationResponseDTO respondToAttendance(
-    UUID token,
-    AttendanceResponseRequest request) {
+      UUID token,
+      AttendanceResponseRequest request) {
 
     Invitation invitation = findByTokenOrThrow(token);
 
     Map<Long, Guest> guestsById = invitation.getGuests().stream()
-      .collect(Collectors.toMap(Guest::getId, guest -> guest));
+        .collect(Collectors.toMap(Guest::getId, guest -> guest));
 
     for (GuestAttendanceResponseDTO response : request.responses()) {
       Guest guest = guestsById.get(response.guestId());
 
       if (guest == null) {
         throw new IllegalArgumentException(
-          "Guest " + response.guestId() + " does not belong to this invitation");
+            "Guest " + response.guestId() + " does not belong to this invitation");
       }
 
       guest.setAttendance(response.attendance());
@@ -80,11 +81,11 @@ public class InvitationService {
   // Una alergia "Otra" no dice nada por sí sola: hay que describirla.
   private void validateAllergy(Guest guest, GuestAttendanceResponseDTO response) {
     boolean noDescription = response.dietaryRestriction() == null
-      || response.dietaryRestriction().isBlank();
+        || response.dietaryRestriction().isBlank();
 
     if (response.allergyType() == AllergyType.OTHER && noDescription) {
       throw new IllegalArgumentException(
-        "Describe la alergia de " + guest.getFullName() + " en las observaciones");
+          "Describe la alergia de " + guest.getFullName() + " en las observaciones");
     }
   }
 
@@ -105,8 +106,8 @@ public class InvitationService {
     long totalGuests = invitation.getGuests().size();
 
     long unansweredGuests = invitation.getGuests().stream()
-      .filter(guest -> guest.getAttendance() == AttendanceStatus.NO_RESPONSE)
-      .count();
+        .filter(guest -> guest.getAttendance() == AttendanceStatus.NO_RESPONSE)
+        .count();
 
     InvitationStatus newStatus;
 
@@ -127,8 +128,8 @@ public class InvitationService {
   // vacío lo borra. No toca la asistencia ni los invitados.
   @Transactional
   public CoupleMessageResponseDTO saveCoupleMessage(
-    UUID token,
-    CoupleMessageRequest request) {
+      UUID token,
+      CoupleMessageRequest request) {
 
     Invitation invitation = findByTokenOrThrow(token);
 
@@ -136,42 +137,42 @@ public class InvitationService {
 
     if (message != null && message.length() > Invitation.COUPLE_MESSAGE_MAX_LENGTH) {
       throw new IllegalArgumentException(
-        "El mensaje no puede superar los " + Invitation.COUPLE_MESSAGE_MAX_LENGTH + " caracteres");
+          "El mensaje no puede superar los " + Invitation.COUPLE_MESSAGE_MAX_LENGTH + " caracteres");
     }
 
     invitation.updateCoupleMessage(message, LocalDateTime.now());
 
     return new CoupleMessageResponseDTO(
-      invitation.getCoupleMessage(),
-      invitation.coupleMessageUpdatedAtInstant());
+        invitation.getCoupleMessage(),
+        invitation.coupleMessageUpdatedAtInstant());
   }
 
   private Invitation findByTokenOrThrow(UUID token) {
     return invitationRepository.findByUniqueToken(token)
-      .orElseThrow(() -> new InvitationNotFoundException(token));
+        .orElseThrow(() -> new InvitationNotFoundException(token));
   }
 
   private InvitationResponseDTO mapToDto(Invitation invitation) {
 
     List<GuestResponseDTO> guests = invitation.getGuests().stream()
-      .map(guest -> GuestResponseDTO.builder()
-        .id(guest.getId())
-        .fullName(guest.getFullName())
-        .isMinor(guest.isMinor())
-        .attendance(guest.getAttendance())
-        .allergyType(guest.getAllergyType())
-        .dietaryRestriction(guest.getDietaryRestriction())
-        .menu(MenuResponseDTO.fromEntity(guest.getMenu()))
-        .build())
-      .toList();
+        .map(guest -> GuestResponseDTO.builder()
+            .id(guest.getId())
+            .fullName(guest.getFullName())
+            .isMinor(guest.isMinor())
+            .attendance(guest.getAttendance())
+            .allergyType(guest.getAllergyType())
+            .dietaryRestriction(guest.getDietaryRestriction())
+            .menu(MenuResponseDTO.fromEntity(guest.getMenu()))
+            .build())
+        .toList();
 
     return InvitationResponseDTO.builder()
-      .id(invitation.getId())
-      .type(invitation.getType())
-      .referenceName(invitation.getReferenceName())
-      .status(invitation.getStatus())
-      .guests(guests)
-      .coupleMessage(invitation.getCoupleMessage())
-      .build();
+        .id(invitation.getId())
+        .type(invitation.getType())
+        .referenceName(invitation.getReferenceName())
+        .status(invitation.getStatus())
+        .guests(guests)
+        .coupleMessage(invitation.getCoupleMessage())
+        .build();
   }
 }

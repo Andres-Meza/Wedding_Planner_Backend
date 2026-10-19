@@ -1,5 +1,18 @@
 package ma.femme.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import ma.femme.dto.AttendanceResponseRequest;
 import ma.femme.dto.CoupleMessageRequest;
 import ma.femme.dto.CoupleMessageResponseDTO;
@@ -14,18 +27,6 @@ import ma.femme.entity.Menu;
 import ma.femme.exception.DefaultMenuUnavailableException;
 import ma.femme.exception.InvitationNotFoundException;
 import ma.femme.repository.InvitationRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class InvitationServiceTest {
 
@@ -47,7 +48,7 @@ class InvitationServiceTest {
     service = new InvitationService(invitationRepository, defaultMenuService);
 
     invitation = Invitation.builder()
-      .id(10L).type(InvitationType.FAMILY).referenceName("Familia Pérez").build();
+        .id(10L).type(InvitationType.FAMILY).referenceName("Familia Pérez").build();
     adult = Guest.builder().id(1L).fullName("Juan Pérez").isMinor(false).build();
     child = Guest.builder().id(2L).fullName("Leo Pérez").isMinor(true).build();
     invitation.addGuest(adult);
@@ -66,8 +67,8 @@ class InvitationServiceTest {
     child.setMenu(kidsMenu);
 
     InvitationResponseDTO result = service.respondToAttendance(token, request(
-      response(1L, AttendanceStatus.CONFIRMED),
-      response(2L, AttendanceStatus.CONFIRMED)));
+        response(1L, AttendanceStatus.CONFIRMED),
+        response(2L, AttendanceStatus.CONFIRMED)));
 
     assertThat(adult.getMenu()).isSameAs(adultMenu);
     assertThat(child.getMenu()).isSameAs(kidsMenu);
@@ -77,8 +78,8 @@ class InvitationServiceTest {
   @Test
   void legacyGuestWithoutMenuReceivesTheDefaultWhenConfirming() {
     service.respondToAttendance(token, request(
-      response(1L, AttendanceStatus.CONFIRMED),
-      response(2L, AttendanceStatus.CONFIRMED)));
+        response(1L, AttendanceStatus.CONFIRMED),
+        response(2L, AttendanceStatus.CONFIRMED)));
 
     assertThat(adult.getMenu()).isSameAs(adultMenu);
     assertThat(child.getMenu()).isSameAs(kidsMenu);
@@ -99,8 +100,8 @@ class InvitationServiceTest {
     adult.setMenu(adultMenu);
 
     service.respondToAttendance(token, request(
-      response(1L, AttendanceStatus.NOT_ATTENDING),
-      response(2L, AttendanceStatus.NOT_ATTENDING)));
+        response(1L, AttendanceStatus.NOT_ATTENDING),
+        response(2L, AttendanceStatus.NOT_ATTENDING)));
 
     assertThat(adult.getAttendance()).isEqualTo(AttendanceStatus.NOT_ATTENDING);
     assertThat(adult.getMenu()).isSameAs(adultMenu);
@@ -113,7 +114,7 @@ class InvitationServiceTest {
     child.setMenu(kidsMenu);
 
     InvitationResponseDTO result = service.respondToAttendance(token, request(
-      response(1L, AttendanceStatus.CONFIRMED)));
+        response(1L, AttendanceStatus.CONFIRMED)));
 
     assertThat(result.status()).isEqualTo(InvitationStatus.PARTIALLY_RESPONDED);
     assertThat(child.getAttendance()).isEqualTo(AttendanceStatus.NO_RESPONSE);
@@ -122,11 +123,11 @@ class InvitationServiceTest {
   @Test
   void unavailableDefaultMenuIsReportedWhenAGuestWithoutMenuConfirms() {
     when(defaultMenuService.defaultMenuFor(false))
-      .thenThrow(new DefaultMenuUnavailableException("sin menú"));
+        .thenThrow(new DefaultMenuUnavailableException("sin menú"));
 
     assertThatThrownBy(() -> service.respondToAttendance(token, request(
-      response(1L, AttendanceStatus.CONFIRMED))))
-      .isInstanceOf(DefaultMenuUnavailableException.class);
+        response(1L, AttendanceStatus.CONFIRMED))))
+        .isInstanceOf(DefaultMenuUnavailableException.class);
   }
 
   // ---------- Mensaje para los novios ----------
@@ -139,7 +140,7 @@ class InvitationServiceTest {
   @Test
   void savesAndReturnsTheMessage() {
     CoupleMessageResponseDTO saved = service.saveCoupleMessage(
-      token, new CoupleMessageRequest("  ¡Felicidades!  "));
+        token, new CoupleMessageRequest("  ¡Felicidades!  "));
 
     assertThat(saved.message()).isEqualTo("¡Felicidades!");
     assertThat(saved.updatedAt()).isNotNull();
@@ -174,7 +175,7 @@ class InvitationServiceTest {
     service.saveCoupleMessage(token, new CoupleMessageRequest("hola"));
 
     CoupleMessageResponseDTO cleared = service.saveCoupleMessage(
-      token, new CoupleMessageRequest("   "));
+        token, new CoupleMessageRequest("   "));
 
     assertThat(cleared.message()).isNull();
     assertThat(cleared.updatedAt()).isNull();
@@ -185,7 +186,7 @@ class InvitationServiceTest {
     String tooLong = "a".repeat(Invitation.COUPLE_MESSAGE_MAX_LENGTH + 1);
 
     assertThatThrownBy(() -> service.saveCoupleMessage(token, new CoupleMessageRequest(tooLong)))
-      .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -193,7 +194,7 @@ class InvitationServiceTest {
     String max = "a".repeat(Invitation.COUPLE_MESSAGE_MAX_LENGTH);
 
     assertThat(service.saveCoupleMessage(token, new CoupleMessageRequest(max)).message())
-      .hasSize(Invitation.COUPLE_MESSAGE_MAX_LENGTH);
+        .hasSize(Invitation.COUPLE_MESSAGE_MAX_LENGTH);
   }
 
   @Test
@@ -212,7 +213,7 @@ class InvitationServiceTest {
     when(invitationRepository.findByUniqueToken(other)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.saveCoupleMessage(other, new CoupleMessageRequest("hola")))
-      .isInstanceOf(InvitationNotFoundException.class);
+        .isInstanceOf(InvitationNotFoundException.class);
   }
 
   // ---------- Utilidades ----------

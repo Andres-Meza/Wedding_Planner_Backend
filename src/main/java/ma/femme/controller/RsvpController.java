@@ -1,5 +1,17 @@
 package ma.femme.controller;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.AttendanceResponseRequest;
@@ -9,11 +21,6 @@ import ma.femme.dto.InvitationResponseDTO;
 import ma.femme.dto.MenuResponseDTO;
 import ma.femme.service.InvitationService;
 import ma.femme.service.MenuService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/rsvp")
@@ -49,8 +56,7 @@ public class RsvpController {
       @Valid @RequestBody AttendanceResponseRequest request) {
 
     return ResponseEntity.ok(
-        invitationService.respondToAttendance(token, request)
-    );
+        invitationService.respondToAttendance(token, request));
   }
 
   // Mensaje opcional para los novios. PUT porque es idempotente: guardar

@@ -1,8 +1,8 @@
 package ma.femme.service;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 class MessageTextTest {
 
@@ -16,7 +16,7 @@ class MessageTextTest {
   @Test
   void trimsAndKeepsLineBreaksAndAccents() {
     assertThat(MessageText.normalize("  ¡Felicidades!\n\nCon cariño  "))
-      .isEqualTo("¡Felicidades!\n\nCon cariño");
+        .isEqualTo("¡Felicidades!\n\nCon cariño");
   }
 
   @Test

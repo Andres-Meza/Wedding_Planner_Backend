@@ -1,5 +1,13 @@
 package ma.femme.export;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -13,18 +21,12 @@ import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+
 import ma.femme.dto.GuestFoodRowDTO;
 import ma.femme.dto.MainCourseDTO;
 import ma.femme.entity.AttendanceStatus;
 import ma.femme.service.FoodReportService.FoodSummary;
 import ma.femme.service.FoodReportService.MenuCount;
-import org.springframework.stereotype.Component;
-
-import java.awt.Color;
-import java.io.ByteArrayOutputStream;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 // PDF pensado para entregar al catering: resumen, alergias primero (lo más
 // crítico) y luego el detalle de cada invitado confirmado.
@@ -47,8 +49,8 @@ public class FoodPdfExporter {
   public byte[] export(List<GuestFoodRowDTO> rows, FoodSummary summary) {
     // Al catering solo le interesa quien realmente asiste.
     List<GuestFoodRowDTO> confirmed = rows.stream()
-            .filter(row -> row.attendance() == AttendanceStatus.CONFIRMED)
-            .toList();
+        .filter(row -> row.attendance() == AttendanceStatus.CONFIRMED)
+        .toList();
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Document document = new Document(PageSize.A4, 40, 40, 40, 50);
@@ -80,7 +82,7 @@ public class FoodPdfExporter {
   private void addTitle(Document document) throws DocumentException {
     document.add(new Paragraph("Alimentación de invitados", TITLE));
     Paragraph date = new Paragraph(
-            "Generado el " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), SMALL);
+        "Generado el " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), SMALL);
     date.setSpacingAfter(14);
     document.add(date);
   }
@@ -115,24 +117,24 @@ public class FoodPdfExporter {
   }
 
   private void addAllergySection(Document document, List<GuestFoodRowDTO> confirmed)
-          throws DocumentException {
+      throws DocumentException {
 
     document.add(spacedSectionTitle("ALERGIAS Y RESTRICCIONES ALIMENTARIAS"));
 
     List<GuestFoodRowDTO> flagged = confirmed.stream()
-            .filter(ReportLabels::needsAttention)
-            .toList();
+        .filter(ReportLabels::needsAttention)
+        .toList();
 
     if (flagged.isEmpty()) {
       document.add(new Paragraph("Sin alergias ni restricciones reportadas.", NORMAL));
       return;
     }
 
-    PdfPTable table = new PdfPTable(new float[]{3f, 2f, 2f, 4f});
+    PdfPTable table = new PdfPTable(new float[] { 3f, 2f, 2f, 4f });
     table.setWidthPercentage(100);
     table.setHeaderRows(1);
 
-    for (String title : new String[]{"Invitado", "Menú", "Alergia", "Observaciones"}) {
+    for (String title : new String[] { "Invitado", "Menú", "Alergia", "Observaciones" }) {
       PdfPCell cell = new PdfPCell(new Phrase(title, ALERT_HEADER));
       cell.setBackgroundColor(ALERT_RED);
       cell.setPadding(5);
@@ -153,7 +155,7 @@ public class FoodPdfExporter {
   }
 
   private void addGuestDetail(Document document, List<GuestFoodRowDTO> confirmed)
-          throws DocumentException {
+      throws DocumentException {
 
     document.add(spacedSectionTitle("INVITADOS Y MENÚ"));
 
@@ -177,7 +179,7 @@ public class FoodPdfExporter {
       }
 
       cell.addElement(new Paragraph(
-              row.guestName() + "  (" + ReportLabels.guestType(row.isMinor()) + ")", BOLD));
+          row.guestName() + "  (" + ReportLabels.guestType(row.isMinor()) + ")", BOLD));
 
       var menu = row.menu();
       if (menu == null) {
@@ -199,7 +201,7 @@ public class FoodPdfExporter {
       String observations = ReportLabels.observations(row);
       if (!observations.isEmpty()) {
         cell.addElement(new Paragraph("Observaciones: " + observations,
-                hasAllergy ? ALERT : NORMAL));
+            hasAllergy ? ALERT : NORMAL));
       }
 
       table.addCell(cell);

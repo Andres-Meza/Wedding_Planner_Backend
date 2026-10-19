@@ -1,11 +1,14 @@
 package ma.femme.service;
 
-import ma.femme.dto.GuestMessageFilter;
-import ma.femme.dto.GuestMessagePageDTO;
-import ma.femme.entity.Guest;
-import ma.femme.entity.Invitation;
-import ma.femme.entity.InvitationType;
-import ma.femme.repository.InvitationRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -14,14 +17,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import ma.femme.dto.GuestMessageFilter;
+import ma.femme.dto.GuestMessagePageDTO;
+import ma.femme.entity.Guest;
+import ma.femme.entity.Invitation;
+import ma.femme.entity.InvitationType;
+import ma.femme.repository.InvitationRepository;
 
 class GuestMessageServiceTest {
 
@@ -39,14 +40,14 @@ class GuestMessageServiceTest {
   @Test
   void mapsRowsAndReturnsGeneralCounters() {
     Invitation family = Invitation.builder()
-      .id(7L).type(InvitationType.FAMILY).referenceName("Familia Pérez").build();
+        .id(7L).type(InvitationType.FAMILY).referenceName("Familia Pérez").build();
     family.addGuest(Guest.builder().id(1L).fullName("Juan").build());
     family.addGuest(Guest.builder().id(2L).fullName("Leo").isMinor(true).build());
     LocalDateTime sent = LocalDateTime.of(2026, 10, 1, 18, 30);
     family.updateCoupleMessage("¡Felicidades!", sent);
 
     when(repository.findAll(any(Specification.class), any(Pageable.class)))
-      .thenReturn(new PageImpl<>(List.of(family), org.springframework.data.domain.PageRequest.of(0, 10), 1));
+        .thenReturn(new PageImpl<>(List.of(family), org.springframework.data.domain.PageRequest.of(0, 10), 1));
 
     GuestMessagePageDTO page = service.list(0, 10, null, null, null);
 
@@ -57,7 +58,7 @@ class GuestMessageServiceTest {
       assertThat(row.guestCount()).isEqualTo(2);
       assertThat(row.message()).isEqualTo("¡Felicidades!");
       assertThat(row.messageUpdatedAt())
-        .isEqualTo(sent.atZone(java.time.ZoneId.systemDefault()).toInstant());
+          .isEqualTo(sent.atZone(java.time.ZoneId.systemDefault()).toInstant());
     });
     assertThat(page.totalInvitations()).isEqualTo(10);
     assertThat(page.withMessageCount()).isEqualTo(4);

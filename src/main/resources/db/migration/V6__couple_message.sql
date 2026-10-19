@@ -10,16 +10,21 @@
 -- couple_message_updated_at  fecha y hora de la última vez que se guardó.
 
 ALTER TABLE invitation
-  ADD COLUMN couple_message            VARCHAR(1000),
-  ADD COLUMN couple_message_updated_at TIMESTAMP;
+ADD COLUMN couple_message VARCHAR(1000),
+ADD COLUMN couple_message_updated_at TIMESTAMP;
 
 -- Coherencia: hay fecha si y solo si hay mensaje.
 ALTER TABLE invitation
-  ADD CONSTRAINT chk_invitation_couple_message_consistent
-    CHECK ((couple_message IS NULL) = (couple_message_updated_at IS NULL));
+ADD CONSTRAINT chk_invitation_couple_message_consistent CHECK (
+    (couple_message IS NULL) = (
+        couple_message_updated_at IS NULL
+    )
+);
 
 -- Acelera el listado de la pantalla "Mensajes de los invitados"
 -- (más recientes primero, solo invitaciones que sí tienen mensaje).
-CREATE INDEX idx_invitation_couple_message_updated_at
-  ON invitation (couple_message_updated_at DESC)
-  WHERE couple_message IS NOT NULL;
+CREATE INDEX idx_invitation_couple_message_updated_at ON invitation (
+    couple_message_updated_at DESC
+)
+WHERE
+    couple_message IS NOT NULL;

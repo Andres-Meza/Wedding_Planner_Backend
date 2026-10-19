@@ -1,5 +1,15 @@
 package ma.femme.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.FloorPlanElementDTO;
 import ma.femme.dto.SaveFloorPlanRequest;
@@ -7,15 +17,6 @@ import ma.femme.entity.FloorPlanElement;
 import ma.femme.entity.TableWedding;
 import ma.femme.repository.FloorPlanElementRepository;
 import ma.femme.repository.TableWeddingRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +28,8 @@ public class FloorPlanService {
   @Transactional(readOnly = true)
   public List<FloorPlanElementDTO> getPlan() {
     return elementRepository.findAllByOrderByIdAsc().stream()
-      .map(this::toDto)
-      .toList();
+        .map(this::toDto)
+        .toList();
   }
 
   // Reemplaza el plano completo por el recibido: las piezas con id se
@@ -66,14 +67,14 @@ public class FloorPlanService {
     // Se borran primero las que ya no están, para liberar su mesa antes de
     // volver a enlazarla (table_id es único).
     List<FloorPlanElement> removed = existing.values().stream()
-      .filter(element -> !keptIds.contains(element.getId()))
-      .toList();
+        .filter(element -> !keptIds.contains(element.getId()))
+        .toList();
     elementRepository.deleteAll(removed);
     elementRepository.flush();
 
     return elementRepository.saveAll(result).stream()
-      .map(this::toDto)
-      .toList();
+        .map(this::toDto)
+        .toList();
   }
 
   private void apply(FloorPlanElement element, FloorPlanElementDTO dto, Set<Long> usedTableIds) {
@@ -99,7 +100,7 @@ public class FloorPlanService {
         throw new IllegalArgumentException("La mesa " + dto.tableId() + " aparece dos veces en el plano");
       }
       TableWedding table = tableRepository.findById(dto.tableId())
-        .orElseThrow(() -> new IllegalArgumentException("No existe la mesa " + dto.tableId()));
+          .orElseThrow(() -> new IllegalArgumentException("No existe la mesa " + dto.tableId()));
       element.setTableWedding(table);
     } else {
       element.setTableWedding(null);
@@ -109,21 +110,21 @@ public class FloorPlanService {
   private void requireRange(String field, double value, double min, double max) {
     if (Double.isNaN(value) || value < min || value > max) {
       throw new IllegalArgumentException(
-        "El valor de '" + field + "' debe estar entre " + (int) min + " y " + (int) max);
+          "El valor de '" + field + "' debe estar entre " + (int) min + " y " + (int) max);
     }
   }
 
   private FloorPlanElementDTO toDto(FloorPlanElement element) {
     return FloorPlanElementDTO.builder()
-      .id(element.getId())
-      .kind(element.getKind())
-      .x(element.getX())
-      .y(element.getY())
-      .width(element.getWidth())
-      .height(element.getHeight())
-      .rotation(element.getRotation())
-      .label(element.getLabel())
-      .tableId(element.getTableWedding() == null ? null : element.getTableWedding().getId())
-      .build();
+        .id(element.getId())
+        .kind(element.getKind())
+        .x(element.getX())
+        .y(element.getY())
+        .width(element.getWidth())
+        .height(element.getHeight())
+        .rotation(element.getRotation())
+        .label(element.getLabel())
+        .tableId(element.getTableWedding() == null ? null : element.getTableWedding().getId())
+        .build();
   }
 }

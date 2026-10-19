@@ -1,5 +1,14 @@
 package ma.femme.export;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -14,14 +23,6 @@ import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import org.springframework.stereotype.Component;
-
-import java.awt.Color;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 // PDF del plano: primera página con el dibujo del salón y, después, quién se
 // sienta en cada mesa (con menú y alergias) para el catering y el equipo.
@@ -81,15 +82,15 @@ public class FloorPlanPdfExporter {
     document.add(new Paragraph("Plano del salón", TITLE));
 
     Paragraph date = new Paragraph(
-      "Generado el " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), SMALL);
+        "Generado el " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), SMALL);
     date.setSpacingAfter(10);
     document.add(date);
 
     Image image = Image.getInstance(planImage);
     // Cabe en lo que queda de la página tras el título.
     image.scaleToFit(
-      document.getPageSize().getWidth() - 72,
-      document.getPageSize().getHeight() - 130);
+        document.getPageSize().getWidth() - 72,
+        document.getPageSize().getHeight() - 130);
     image.setAlignment(Element.ALIGN_CENTER);
     document.add(image);
   }
@@ -105,7 +106,7 @@ public class FloorPlanPdfExporter {
 
     for (TableBlock block : tables) {
       Paragraph heading = new Paragraph(
-        block.name() + "  —  " + block.guests().size() + " de " + block.capacity() + " sillas", BOLD);
+          block.name() + "  —  " + block.guests().size() + " de " + block.capacity() + " sillas", BOLD);
       heading.setSpacingBefore(10);
       heading.setSpacingAfter(3);
       document.add(heading);
@@ -115,10 +116,10 @@ public class FloorPlanPdfExporter {
         continue;
       }
 
-      PdfPTable table = new PdfPTable(new float[]{1f, 4f, 3f, 3f});
+      PdfPTable table = new PdfPTable(new float[] { 1f, 4f, 3f, 3f });
       table.setWidthPercentage(100);
       table.setHeaderRows(1);
-      for (String title : new String[]{"Silla", "Invitado", "Menú", "Alergia"}) {
+      for (String title : new String[] { "Silla", "Invitado", "Menú", "Alergia" }) {
         table.addCell(headerCell(title));
       }
 
@@ -142,10 +143,10 @@ public class FloorPlanPdfExporter {
     title.setSpacingBefore(18);
     document.add(title);
 
-    PdfPTable table = new PdfPTable(new float[]{5f, 3f, 3f});
+    PdfPTable table = new PdfPTable(new float[] { 5f, 3f, 3f });
     table.setWidthPercentage(100);
     table.setHeaderRows(1);
-    for (String header : new String[]{"Invitado", "Menú", "Alergia"}) {
+    for (String header : new String[] { "Invitado", "Menú", "Alergia" }) {
       table.addCell(headerCell(header));
     }
     for (UnseatedLine line : unseated) {

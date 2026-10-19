@@ -6,6 +6,5 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record SaveFloorPlanRequest(
-  @NotNull @Valid List<FloorPlanElementDTO> elements
-) {
+    @NotNull @Valid List<FloorPlanElementDTO> elements) {
 }

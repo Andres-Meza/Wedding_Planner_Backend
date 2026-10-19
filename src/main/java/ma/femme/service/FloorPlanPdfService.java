@@ -1,5 +1,16 @@
 package ma.femme.service;
 
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ma.femme.dto.AssignedGuestDTO;
 import ma.femme.dto.TableWithGuestsDTO;
@@ -10,16 +21,6 @@ import ma.femme.export.FloorPlanPdfExporter.GuestLine;
 import ma.femme.export.FloorPlanPdfExporter.TableBlock;
 import ma.femme.export.FloorPlanPdfExporter.UnseatedLine;
 import ma.femme.repository.GuestRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class FloorPlanPdfService {
 
   // Un PNG del plano pesa algunos cientos de KB; más de esto no es un plano.
   private static final int MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-  private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 'P', 'N', 'G'};
+  private static final byte[] PNG_SIGNATURE = { (byte) 0x89, 'P', 'N', 'G' };
 
   private final TableAssignmentService tableAssignmentService;
   private final GuestRepository guestRepository;
@@ -47,18 +48,18 @@ public class FloorPlanPdfService {
 
     for (TableWithGuestsDTO table : tableAssignmentService.getTableLayout()) {
       blocks.add(new TableBlock(
-        table.nameOrNumber(),
-        table.capacity(),
-        linesFor(table, guestsById, seatedIds)));
+          table.nameOrNumber(),
+          table.capacity(),
+          linesFor(table, guestsById, seatedIds)));
     }
 
     List<UnseatedLine> unseated = guestsById.values().stream()
-      .filter(guest -> guest.getAttendance() == AttendanceStatus.CONFIRMED)
-      .filter(guest -> !seatedIds.contains(guest.getId()))
-      .sorted((a, b) -> a.getFullName().compareToIgnoreCase(b.getFullName()))
-      .map(guest -> new UnseatedLine(
-        guest.getFullName(), menuName(guest), allergyLabel(guest)))
-      .toList();
+        .filter(guest -> guest.getAttendance() == AttendanceStatus.CONFIRMED)
+        .filter(guest -> !seatedIds.contains(guest.getId()))
+        .sorted((a, b) -> a.getFullName().compareToIgnoreCase(b.getFullName()))
+        .map(guest -> new UnseatedLine(
+            guest.getFullName(), menuName(guest), allergyLabel(guest)))
+        .toList();
 
     return exporter.export(image, blocks, unseated);
   }
@@ -66,7 +67,7 @@ public class FloorPlanPdfService {
   // Mismo criterio que el plano en pantalla: quien tiene silla fija va en
   // ella y el resto se acomoda en las sillas libres, en orden.
   private List<GuestLine> linesFor(
-    TableWithGuestsDTO table, Map<Long, Guest> guestsById, Set<Long> seatedIds) {
+      TableWithGuestsDTO table, Map<Long, Guest> guestsById, Set<Long> seatedIds) {
 
     int capacity = table.capacity();
     AssignedGuestDTO[] seats = new AssignedGuestDTO[capacity];
@@ -100,10 +101,10 @@ public class FloorPlanPdfService {
       seatedIds.add(assigned.guestId());
       Guest guest = guestsById.get(assigned.guestId());
       lines.add(new GuestLine(
-        String.valueOf(i + 1),
-        assigned.fullName(),
-        guest == null ? "-" : menuName(guest),
-        guest == null ? "" : allergyLabel(guest)));
+          String.valueOf(i + 1),
+          assigned.fullName(),
+          guest == null ? "-" : menuName(guest),
+          guest == null ? "" : allergyLabel(guest)));
     }
     return lines;
   }
@@ -119,8 +120,8 @@ public class FloorPlanPdfService {
     }
     String observations = guest.getDietaryRestriction();
     return observations == null || observations.isBlank()
-      ? guest.getAllergyType().getLabel()
-      : guest.getAllergyType().getLabel() + " — " + observations.trim();
+        ? guest.getAllergyType().getLabel()
+        : guest.getAllergyType().getLabel() + " — " + observations.trim();
   }
 
   private byte[] decodePng(String imageBase64) {

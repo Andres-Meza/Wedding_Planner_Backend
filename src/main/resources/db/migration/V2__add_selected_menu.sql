@@ -1,2 +1,1 @@
-ALTER TABLE guest
-    ADD COLUMN selected_menu VARCHAR(50);
+ALTER TABLE guest ADD COLUMN selected_menu VARCHAR(50);
