@@ -223,6 +223,6 @@ class InvitationServiceTest {
   }
 
   private static AttendanceResponseRequest request(GuestAttendanceResponseDTO... responses) {
-    return new AttendanceResponseRequest("Juan Pérez", List.of(responses));
+    return new AttendanceResponseRequest(List.of(responses));
   }
 }

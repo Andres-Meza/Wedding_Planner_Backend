@@ -59,7 +59,6 @@ public class InvitationService {
       guest.setAttendance(response.attendance());
       guest.setAllergyType(response.allergyType());
       guest.setDietaryRestriction(response.dietaryRestriction());
-      guest.setRespondedBy(request.respondedBy());
       guest.setResponseDate(LocalDateTime.now());
 
       if (response.attendance() == AttendanceStatus.CONFIRMED) {

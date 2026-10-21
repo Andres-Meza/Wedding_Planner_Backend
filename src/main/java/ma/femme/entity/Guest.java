@@ -48,11 +48,6 @@ public class Guest {
   @Builder.Default
   private AttendanceStatus attendance = AttendanceStatus.NO_RESPONSE;
 
-  // Name of the person who submitted the response:
-  // the guest themselves or the person responsible for the invitation.
-  @Column(name = "responded_by")
-  private String respondedBy;
-
   // Tipo de alergia alimentaria. null = sin alergias reportadas.
   @Enumerated(EnumType.STRING)
   @Column(name = "allergy_type", length = 20)
