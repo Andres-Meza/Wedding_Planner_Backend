@@ -10,7 +10,6 @@ import ma.femme.dto.AdminInvitationResponseDTO;
 import ma.femme.dto.CreateGuestRequest;
 import ma.femme.dto.CreateInvitationRequest;
 import ma.femme.dto.GuestResponseDTO;
-import ma.femme.dto.MenuResponseDTO;
 import ma.femme.entity.Guest;
 import ma.femme.entity.Invitation;
 import ma.femme.entity.InvitationType;
@@ -39,18 +38,10 @@ public class AdminInvitationService {
         .contactEmail(request.contactEmail())
         .build();
 
+    // Si falta el menú por defecto de algún invitado, la transacción
+    // completa se revierte: no se guarda nada a medias.
     for (CreateGuestRequest guestRequest : request.guests()) {
-      // El menú se asigna aquí, en el backend, según la categoría de CADA
-      // invitado (adulto -> Menú 1, menor -> Menú Infantil 1). Si el menú
-      // por defecto no existe o está inactivo se lanza una excepción y la
-      // transacción completa se revierte: no se guarda nada a medias.
-      Guest guest = Guest.builder()
-          .fullName(guestRequest.fullName())
-          .isMinor(guestRequest.isMinor())
-          .menu(defaultMenuService.defaultMenuFor(guestRequest.isMinor()))
-          .build();
-
-      invitation.addGuest(guest);
+      invitation.addGuest(newGuest(guestRequest));
     }
 
     Invitation saved = invitationRepository.save(invitation);
@@ -72,20 +63,14 @@ public class AdminInvitationService {
           "This is an individual invitation and already has a guest; use FAMILY for more than one");
     }
 
-    Guest guest = Guest.builder()
-        .fullName(request.fullName())
-        .isMinor(request.isMinor())
-        .menu(defaultMenuService.defaultMenuFor(request.isMinor()))
-        .build();
-
-    invitation.addGuest(guest);
+    invitation.addGuest(newGuest(request));
 
     return mapToAdminDTO(invitation);
   }
 
   @Transactional(readOnly = true)
   public List<AdminInvitationResponseDTO> listAll() {
-    return invitationRepository.findAll().stream()
+    return invitationRepository.findAllByOrderByIdAsc().stream()
         .map(this::mapToAdminDTO)
         .toList();
   }
@@ -99,18 +84,20 @@ public class AdminInvitationService {
     return mapToAdminDTO(invitation);
   }
 
+  // El menú lo asigna el backend según la categoría de cada invitado
+  // (adulto -> Menú 1, menor -> Menú Infantil 1).
+  private Guest newGuest(CreateGuestRequest request) {
+    return Guest.builder()
+        .fullName(request.fullName())
+        .isMinor(request.isMinor())
+        .menu(defaultMenuService.defaultMenuFor(request.isMinor()))
+        .build();
+  }
+
   private AdminInvitationResponseDTO mapToAdminDTO(Invitation invitation) {
 
     List<GuestResponseDTO> guests = invitation.getGuests().stream()
-        .map(guest -> GuestResponseDTO.builder()
-            .id(guest.getId())
-            .fullName(guest.getFullName())
-            .isMinor(guest.isMinor())
-            .attendance(guest.getAttendance())
-            .allergyType(guest.getAllergyType())
-            .dietaryRestriction(guest.getDietaryRestriction())
-            .menu(MenuResponseDTO.fromEntity(guest.getMenu()))
-            .build())
+        .map(GuestResponseDTO::fromEntity)
         .toList();
 
     return AdminInvitationResponseDTO.builder()

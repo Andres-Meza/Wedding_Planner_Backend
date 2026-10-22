@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import ma.femme.dto.AdminInvitationResponseDTO;
 import ma.femme.dto.CreateGuestRequest;
 import ma.femme.dto.CreateInvitationRequest;
+import ma.femme.entity.Guest;
 import ma.femme.entity.Invitation;
 import ma.femme.entity.InvitationType;
 import ma.femme.entity.Menu;
@@ -76,6 +77,22 @@ class AdminInvitationServiceTest {
             "Juan Pérez=Menú 1",
             "Marta Ruiz=Menú 1",
             "Leo Pérez=Menú Infantil 1");
+  }
+
+  @Test
+  void listAllReadsInvitationsWithTheirGuestsInOneQuery() {
+    Invitation invitation = Invitation.builder()
+        .id(1L).type(InvitationType.INDIVIDUAL).referenceName("Ana").build();
+    invitation.addGuest(Guest.builder().id(5L).fullName("Ana Gómez").menu(adultMenu).build());
+    when(invitationRepository.findAllByOrderByIdAsc()).thenReturn(List.of(invitation));
+
+    List<AdminInvitationResponseDTO> result = service.listAll();
+
+    assertThat(result).singleElement().satisfies(dto -> {
+      assertThat(dto.uniqueToken()).isEqualTo(invitation.getUniqueToken());
+      assertThat(dto.guests()).extracting(guest -> guest.fullName()).containsExactly("Ana Gómez");
+    });
+    verify(invitationRepository, never()).findAll();
   }
 
   @Test

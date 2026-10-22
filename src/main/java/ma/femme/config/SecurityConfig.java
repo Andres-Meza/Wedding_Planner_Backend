@@ -32,24 +32,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
-  @Value("${app.admin.username:admin}")
-  private String adminUsername;
-
-  @Value("${app.admin.password:changeme}")
-  private String adminPassword;
-
-  // Origen(es) del frontend permitidos a llamar esta API desde el
-  // navegador. En desarrollo, el Angular CLI sirve en el 4200.
-  @Value("${app.cors.allowed-origins:https://wedding-planner-frontend-two.vercel.app}")
-  private String[] allowedOrigins;
-
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
+  // Las credenciales no tienen valor por defecto: si no se definen
+  // ADMIN_USERNAME y ADMIN_PASSWORD la aplicación no arranca.
   @Bean
-  public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+  public UserDetailsService userDetailsService(
+      PasswordEncoder passwordEncoder,
+      @Value("${app.admin.username}") String adminUsername,
+      @Value("${app.admin.password}") String adminPassword) {
+
     return new InMemoryUserDetailsManager(
         User.withUsername(adminUsername)
             .password(passwordEncoder.encode(adminPassword))
@@ -57,8 +52,12 @@ public class SecurityConfig {
             .build());
   }
 
+  // Orígenes del frontend autorizados a llamar a la API desde el navegador
+  // (app.cors.allowed-origins, separados por comas; ver application.yml).
   @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
+  public CorsConfigurationSource corsConfigurationSource(
+      @Value("${app.cors.allowed-origins}") String[] allowedOrigins) {
+
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(List.of(allowedOrigins));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

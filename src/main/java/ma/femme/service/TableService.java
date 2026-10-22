@@ -1,6 +1,7 @@
 package ma.femme.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,7 @@ public class TableService {
 
     TableWedding saved = tableRepository.save(table);
 
-    return mapToDTO(saved);
+    return mapToDTO(saved, 0);
   }
 
   // Renombrar la mesa o cambiar su capacidad (el plano lo usa para ajustar
@@ -58,13 +59,15 @@ public class TableService {
     table.setCapacity(request.capacity());
     table.setArea(request.zone());
 
-    return mapToDTO(table);
+    return mapToDTO(table, occupiedSpots);
   }
 
   @Transactional(readOnly = true)
   public List<TableResponseDTO> listAll() {
+    Map<Long, Long> occupiedSpotsByTable = tableAssignmentRepository.occupiedSpotsByTable();
+
     return tableRepository.findAll().stream()
-        .map(this::mapToDTO)
+        .map(table -> mapToDTO(table, occupiedSpotsByTable.getOrDefault(table.getId(), 0L)))
         .toList();
   }
 
@@ -78,9 +81,7 @@ public class TableService {
     tableRepository.deleteById(id);
   }
 
-  private TableResponseDTO mapToDTO(TableWedding table) {
-    long occupiedSpots = tableAssignmentRepository.countByTableWeddingId(table.getId());
-
+  private TableResponseDTO mapToDTO(TableWedding table, long occupiedSpots) {
     return TableResponseDTO.builder()
         .id(table.getId())
         .nameOrNumber(table.getNameOrNumber())

@@ -16,7 +16,6 @@ import ma.femme.dto.CoupleMessageResponseDTO;
 import ma.femme.dto.GuestAttendanceResponseDTO;
 import ma.femme.dto.GuestResponseDTO;
 import ma.femme.dto.InvitationResponseDTO;
-import ma.femme.dto.MenuResponseDTO;
 import ma.femme.entity.AllergyType;
 import ma.femme.entity.AttendanceStatus;
 import ma.femme.entity.Guest;
@@ -154,15 +153,7 @@ public class InvitationService {
   private InvitationResponseDTO mapToDto(Invitation invitation) {
 
     List<GuestResponseDTO> guests = invitation.getGuests().stream()
-        .map(guest -> GuestResponseDTO.builder()
-            .id(guest.getId())
-            .fullName(guest.getFullName())
-            .isMinor(guest.isMinor())
-            .attendance(guest.getAttendance())
-            .allergyType(guest.getAllergyType())
-            .dietaryRestriction(guest.getDietaryRestriction())
-            .menu(MenuResponseDTO.fromEntity(guest.getMenu()))
-            .build())
+        .map(GuestResponseDTO::fromEntity)
         .toList();
 
     return InvitationResponseDTO.builder()

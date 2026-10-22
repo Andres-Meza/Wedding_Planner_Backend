@@ -1,5 +1,6 @@
 package ma.femme.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +20,9 @@ public interface InvitationRepository
   // por cada uno al armar la respuesta.
   @EntityGraph(attributePaths = { "guests", "guests.menu" })
   Optional<Invitation> findByUniqueToken(UUID uniqueToken);
+
+  // Listado del panel de administración: invitados y menús en una sola
+  // consulta, en orden estable.
+  @EntityGraph(attributePaths = { "guests", "guests.menu" })
+  List<Invitation> findAllByOrderByIdAsc();
 }

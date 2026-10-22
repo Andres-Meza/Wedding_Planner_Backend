@@ -4,17 +4,23 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import ma.femme.entity.AttendanceStatus;
 import ma.femme.entity.Guest;
 
 public interface GuestRepository extends JpaRepository<Guest, Long> {
 
-  List<Guest> findByInvitationId(Long invitationId);
-
-  // El nombre debe coincidir con el campo de la entidad ("attendance"),
-  // no con el tipo del enum ("attendanceStatus" no existe como propiedad).
-  List<Guest> findByAttendance(AttendanceStatus attendance);
+  // Invitados con esa respuesta que aún no tienen mesa, con su invitación ya
+  // cargada (la asignación automática los agrupa por invitación).
+  @Query("""
+      select g from Guest g
+        join fetch g.invitation
+      where g.attendance = :attendance
+        and not exists (select 1 from TableAssignment a where a.guest = g)
+      order by g.id
+      """)
+  List<Guest> findWithoutTableByAttendance(@Param("attendance") AttendanceStatus attendance);
 
   // ¿Algún invitado tiene este menú elegido? (para bloquear borrados).
   boolean existsByMenuId(Long menuId);

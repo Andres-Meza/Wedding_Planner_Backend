@@ -28,6 +28,9 @@ replay_pid*
 .gradle/
 build/
 
+# Variables de entorno locales (pueden contener credenciales)
+.env
+
 # IntelliJ IDEA
 .idea/
 *.iml

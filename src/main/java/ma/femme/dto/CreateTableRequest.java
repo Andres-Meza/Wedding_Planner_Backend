@@ -3,9 +3,10 @@ package ma.femme.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record CreateTableRequest(
-    @NotBlank String nameOrNumber,
+    @NotBlank @Size(max = 50) String nameOrNumber,
     @NotNull @Min(1) Integer capacity,
-    String zone) {
+    @Size(max = 100) String zone) {
 }

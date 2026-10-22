@@ -31,7 +31,8 @@ public class MenuService {
         .toList();
   }
 
-  // Solo los menús que se pueden ofrecer hoy — para el formulario de RSVP.
+  // Solo los menús activos. Lo usa únicamente el endpoint obsoleto
+  // GET /rsvp/menu-options.
   @Transactional(readOnly = true)
   public List<MenuResponseDTO> listActive() {
     return menuRepository.findByActiveTrueOrderByKidsAscIdAsc().stream()

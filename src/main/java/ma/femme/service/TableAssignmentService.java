@@ -45,9 +45,7 @@ public class TableAssignmentService {
     List<TableCapacity> tablesWithAvailableCapacity = loadTablesWithAvailableCapacity();
 
     List<Guest> confirmedGuestsWithoutTable = guestRepository
-        .findByAttendance(AttendanceStatus.CONFIRMED).stream()
-        .filter(guest -> !tableAssignmentRepository.existsByGuestId(guest.getId()))
-        .toList();
+        .findWithoutTableByAttendance(AttendanceStatus.CONFIRMED);
 
     // Group by invitation and sort the largest groups first:
     // this places larger families first, which are harder to fit,
@@ -181,32 +179,40 @@ public class TableAssignmentService {
   @Transactional(readOnly = true)
   public List<TableWithGuestsDTO> getTableLayout() {
 
+    Map<Long, List<AssignedGuestDTO>> guestsByTable = tableAssignmentRepository
+        .findAllWithGuestAndTable().stream()
+        .collect(Collectors.groupingBy(
+            assignment -> assignment.getTableWedding().getId(),
+            Collectors.mapping(this::toAssignedGuest, Collectors.toList())));
+
     return tableRepository.findAll().stream()
         .map(table -> TableWithGuestsDTO.builder()
             .tableId(table.getId())
             .nameOrNumber(table.getNameOrNumber())
             .capacity(table.getCapacity())
-            .guests(
-                tableAssignmentRepository.findByTableWeddingId(table.getId()).stream()
-                    .map(assignment -> AssignedGuestDTO.builder()
-                        .guestId(assignment.getGuest().getId())
-                        .fullName(assignment.getGuest().getFullName())
-                        .seatIndex(assignment.getSeatIndex())
-                        .build())
-                    .toList())
+            .guests(guestsByTable.getOrDefault(table.getId(), List.of()))
             .build())
         .toList();
+  }
+
+  private AssignedGuestDTO toAssignedGuest(TableAssignment assignment) {
+    return AssignedGuestDTO.builder()
+        .guestId(assignment.getGuest().getId())
+        .fullName(assignment.getGuest().getFullName())
+        .seatIndex(assignment.getSeatIndex())
+        .build();
   }
 
   private List<TableCapacity> loadTablesWithAvailableCapacity() {
 
     List<TableCapacity> result = new ArrayList<>();
+    Map<Long, Long> occupiedSpotsByTable = tableAssignmentRepository.occupiedSpotsByTable();
 
     for (TableWedding table : tableRepository.findAll()) {
 
-      long occupiedSpots = tableAssignmentRepository.countByTableWeddingId(table.getId());
+      int occupiedSpots = occupiedSpotsByTable.getOrDefault(table.getId(), 0L).intValue();
 
-      int availableSpots = table.getCapacity() - (int) occupiedSpots;
+      int availableSpots = table.getCapacity() - occupiedSpots;
 
       if (availableSpots > 0) {
         result.add(new TableCapacity(table, availableSpots));

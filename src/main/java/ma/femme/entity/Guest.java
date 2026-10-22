@@ -58,8 +58,8 @@ public class Guest {
   @Column(name = "dietary_restriction")
   private String dietaryRestriction;
 
-  // Menú elegido. Debe ser de la misma categoría que el invitado
-  // (menor -> menú infantil); se valida en el servicio.
+  // Menú asignado automáticamente según la categoría del invitado
+  // (adulto -> Menú 1, menor -> Menú Infantil 1); ver DefaultMenuService.
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "menu_id")
   private Menu menu;

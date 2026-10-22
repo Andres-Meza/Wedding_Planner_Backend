@@ -1,5 +1,6 @@
 package ma.femme.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -37,10 +38,10 @@ public class TableAssignment {
   private TableWedding tableWedding;
 
   // Silla concreta dentro de la mesa (0 = primera). null = sin silla fija.
-  @jakarta.persistence.Column(name = "seat_index")
+  @Column(name = "seat_index")
   private Integer seatIndex;
 
-  @jakarta.persistence.Column(name = "manually_assigned", nullable = false)
+  @Column(name = "manually_assigned", nullable = false)
   @Builder.Default
   private boolean manuallyAssigned = false;
 }

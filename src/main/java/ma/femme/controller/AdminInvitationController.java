@@ -18,8 +18,7 @@ import ma.femme.dto.CreateGuestRequest;
 import ma.femme.dto.CreateInvitationRequest;
 import ma.femme.service.AdminInvitationService;
 
-// TODO: Protect this controller with authentication (Spring Security)
-// before deploying to production — it remains open for development for now.
+// Protegido por SecurityConfig: /admin/** exige el rol ADMIN.
 @RestController
 @RequestMapping("/admin/invitations")
 @RequiredArgsConstructor

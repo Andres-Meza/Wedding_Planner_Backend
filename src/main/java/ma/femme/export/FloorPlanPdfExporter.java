@@ -1,6 +1,14 @@
 package ma.femme.export;
 
-import java.awt.Color;
+import static ma.femme.export.PdfStyles.ALERT;
+import static ma.femme.export.PdfStyles.ALERT_BG;
+import static ma.femme.export.PdfStyles.BOLD;
+import static ma.femme.export.PdfStyles.HEADER_BG;
+import static ma.femme.export.PdfStyles.NORMAL;
+import static ma.femme.export.PdfStyles.SECTION;
+import static ma.femme.export.PdfStyles.SMALL;
+import static ma.femme.export.PdfStyles.TITLE;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -13,7 +21,6 @@ import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
 import com.lowagie.text.HeaderFooter;
 import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
@@ -37,18 +44,6 @@ public class FloorPlanPdfExporter {
 
   public record UnseatedLine(String name, String menu, String allergy) {
   }
-
-  private static final Color ALERT_RED = new Color(155, 44, 44);
-  private static final Color ALERT_BG = new Color(253, 236, 236);
-  private static final Color HEADER_BG = new Color(240, 230, 210);
-  private static final Color TEXT_GREY = new Color(90, 90, 90);
-
-  private static final Font TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-  private static final Font SECTION = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13);
-  private static final Font BOLD = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
-  private static final Font NORMAL = FontFactory.getFont(FontFactory.HELVETICA, 10);
-  private static final Font SMALL = FontFactory.getFont(FontFactory.HELVETICA, 9, Font.NORMAL, TEXT_GREY);
-  private static final Font ALERT = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Font.BOLD, ALERT_RED);
 
   public byte[] export(byte[] planImage, List<TableBlock> tables, List<UnseatedLine> unseated) {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
