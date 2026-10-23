@@ -29,7 +29,7 @@ app:
   cors:
     # Orígenes del frontend permitidos, separados por comas. Para otro origen
     # (por ejemplo http://localhost:4200) defina APP_CORS_ALLOWED_ORIGINS.
-    allowed-origins: https://wedding-planner-frontend-two.vercel.app
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
   menus:
     # Menús que se asignan automáticamente al crear invitados (el nombre debe
     # coincidir con el de la tabla menu; no distingue mayúsculas).

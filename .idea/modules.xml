@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Wedding_Planner_Backend.iml" filepath="$PROJECT_DIR$/.idea/modules/Wedding_Planner_Backend.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Wedding_Planner_Backend.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Wedding_Planner_Backend.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Wedding_Planner_Backend.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Wedding_Planner_Backend.test.iml" />
     </modules>
   </component>
 </project>
