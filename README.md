@@ -1168,6 +1168,28 @@ El listado **no** incluye el token ni los datos de contacto. Los contadores gene
 
 ---
 
+## Invitación divertida (segunda invitación)
+
+Segunda experiencia de invitación, con preguntas graciosas y un veredicto humorístico, **conectada a los mismos invitados** que la invitación formal. No sustituye al RSVP formal ni cambia sus tokens.
+
+- **Enlace individual.** La invitación formal usa `invitation.unique_token` (de toda la invitación o familia). La divertida usa `guest.fun_token`, uno por invitado e independiente (migración `V8__fun_invitation.sql`, que genera el token de los invitados ya existentes con `gen_random_uuid()`, disponible desde PostgreSQL 13).
+- **Persistencia.** `fun_quiz` (una fila por invitado: estado, fechas, resultado) y `fun_quiz_answer` (una respuesta por pregunta, garantizado por una restricción única). Un invitado sin fila "no ha iniciado"; con fila `IN_PROGRESS` "iniciado"; `COMPLETED` "completado": estados excluyentes.
+- **Preguntas y veredictos.** Viven en `FunQuizCatalog` (fuente única; el frontend dibuja lo que devuelve). Para añadir una opción basta una línea; las claves se guardan en la base de datos y no deben renombrarse. La regla del veredicto está en `FunQuizResolver` (determinista; orden de prioridad documentado en la clase).
+- **Seguridad.** `/fun/**` es público y el token individual es la credencial; ningún endpoint recibe un id de invitado, así que solo se lee o escribe el cuestionario del dueño del token. `/admin/fun-invitations/**` exige rol `ADMIN`. Un token inexistente devuelve 404 sin repetir el token. Una vez completado, las respuestas no se pueden cambiar (409).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/fun/{token}` | Estado: preguntas, respuestas guardadas y veredicto si terminó |
+| PUT | `/fun/{token}/answers/{questionKey}` | Guarda/reemplaza una respuesta (idempotente) body `{"optionKey": "..."}` |
+| POST | `/fun/{token}/complete` | Cierra el cuestionario y guarda el veredicto (idempotente) |
+| GET | `/admin/fun-invitations` | Listado paginado: `page`, `size`, `search`, `invitationId`, `state` (`NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`) |
+| GET | `/admin/fun-invitations/stats` | Totales por estado, % de finalización, distribución por pregunta y resultados |
+| GET | `/admin/fun-invitations/{guestId}` | Detalle con respuestas y veredicto |
+| POST | `/admin/fun-invitations/{guestId}/regenerate-token?confirm=true` | Genera un token divertido nuevo (invalida el anterior; sin `confirm=true` responde 400) |
+| GET | `/admin/fun-invitations/export` | CSV (UTF-8 con BOM, separador `;`) |
+
+No requiere variables de entorno nuevas. Las pruebas están en `FunQuizResolverTest`, `FunQuizCatalogTest`, `FunInvitationServiceTest`, `AdminFunInvitationServiceTest`, `FunQuizCsvExporterTest` y `FunAnswerRequestValidationTest`.
+
 ## 8. Base de datos y modelo de información
 
 ### 8.1 Motor, persistencia y verificación

@@ -1,6 +1,7 @@
 package ma.femme.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -66,4 +67,11 @@ public class Guest {
 
   @Column(name = "response_date")
   private LocalDateTime responseDate;
+
+  // Credencial del enlace de la invitación divertida de ESTE invitado.
+  // Es independiente de Invitation.uniqueToken (la invitación formal, que
+  // es de toda la invitación). Solo cambia si el admin la regenera.
+  @Column(name = "fun_token", nullable = false, unique = true)
+  @Builder.Default
+  private UUID funToken = UUID.randomUUID();
 }

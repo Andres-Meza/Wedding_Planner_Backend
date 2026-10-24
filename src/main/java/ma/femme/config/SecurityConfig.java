@@ -20,8 +20,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Los endpoints de RSVP quedan públicos (el token en la URL es la propia
- * credencial de acceso a esa invitación). Los endpoints de administración
+ * Los endpoints de RSVP y de la invitación divertida (/fun) quedan públicos
+ * (el token en la URL es la propia credencial de acceso a esa invitación). Los endpoints de administración
  * (/admin/**) requieren autenticación HTTP Basic con las credenciales
  * definidas en app.admin.username / app.admin.password.
  *
@@ -76,7 +76,7 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/rsvp/**").permitAll()
+            .requestMatchers("/rsvp/**", "/fun/**").permitAll()
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .anyRequest().authenticated())
         .httpBasic(Customizer.withDefaults());

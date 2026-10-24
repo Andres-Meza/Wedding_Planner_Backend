@@ -19,6 +19,24 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
   }
 
+  // Token de la invitación divertida inexistente (404, sin repetir el token).
+  @ExceptionHandler(FunInvitationNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleFunInvitationNotFound(
+      FunInvitationNotFoundException ex) {
+    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  @ExceptionHandler(GuestNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleGuestNotFound(GuestNotFoundException ex) {
+    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  // Cambiar respuestas de un cuestionario ya completado.
+  @ExceptionHandler(FunQuizCompletedException.class)
+  public ResponseEntity<Map<String, Object>> handleFunQuizCompleted(FunQuizCompletedException ex) {
+    return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
   // Borrar un menú que ya eligieron invitados.
   @ExceptionHandler(MenuInUseException.class)
   public ResponseEntity<Map<String, Object>> handleMenuInUse(MenuInUseException ex) {
