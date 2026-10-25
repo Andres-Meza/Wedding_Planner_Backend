@@ -50,7 +50,7 @@ class FunQuizResolverTest {
 
   @Test
   void anyNonWhiteDressIsApproved() {
-    for (String color : new String[] { "pink", "blue", "green", "red", "purple", "black", "gold", "undecided" }) {
+    for (String color : new String[] {"pink", "blue", "green", "red", "purple", "black", "gold", "undecided"}) {
       assertThat(FunQuizResolver.resolve(answers("love", "processing", "gossip", "cash", color)))
           .isEqualTo(FunQuizCatalog.V_DRESS_APPROVED);
       assertThat(FunQuizCatalog.findVerdict(FunQuizCatalog.V_DRESS_APPROVED).orElseThrow().approved())
