@@ -12,45 +12,54 @@ import org.junit.jupiter.api.Test;
 class FunQuizResolverTest {
 
   private static Map<String, String> answers(
-      String attend, String excitement, String tears, String gift) {
+      String attend, String excitement, String tears, String gift, String dress) {
     Map<String, String> answers = new LinkedHashMap<>();
     answers.put(FunQuizCatalog.Q_ATTEND, attend);
     answers.put(FunQuizCatalog.Q_EXCITEMENT, excitement);
     answers.put(FunQuizCatalog.Q_TEARS, tears);
     answers.put(FunQuizCatalog.Q_GIFT, gift);
+    answers.put(FunQuizCatalog.Q_DRESS, dress);
     return answers;
   }
 
   @Test
-  void lookingForAnOutfitGetsTheWhiteDressJoke() {
-    assertThat(FunQuizResolver.resolve(answers("outfit", "countdown", "maybe_not", "home")))
+  void aWhiteDressGetsTheNotApprovedJoke() {
+    assertThat(FunQuizResolver.resolve(answers("love", "countdown", "maybe_not", "home", "white")))
         .isEqualTo(FunQuizCatalog.V_WHITE_DRESS);
   }
 
   @Test
   void rulesAreEvaluatedInPriorityOrder() {
-    assertThat(FunQuizResolver.resolve(answers("outfit", "more_than_couple", "from_entrance", "dance")))
+    assertThat(FunQuizResolver.resolve(answers("outfit", "more_than_couple", "from_entrance", "dance", "white")))
         .isEqualTo(FunQuizCatalog.V_WHITE_DRESS);
-    assertThat(FunQuizResolver.resolve(answers("obvio", "more_than_couple", "from_entrance", "dance")))
+    assertThat(FunQuizResolver.resolve(answers("obvio", "more_than_couple", "from_entrance", "dance", "blue")))
         .isEqualTo(FunQuizCatalog.V_MOST_EXCITED);
-    assertThat(FunQuizResolver.resolve(answers("obvio", "countdown", "from_entrance", "dance")))
+    assertThat(FunQuizResolver.resolve(answers("obvio", "countdown", "from_entrance", "dance", "blue")))
         .isEqualTo(FunQuizCatalog.V_DRAMATIC);
-    assertThat(FunQuizResolver.resolve(answers("food", "countdown", "maybe_not", "dance")))
+    assertThat(FunQuizResolver.resolve(answers("food", "countdown", "maybe_not", "dance", "blue")))
         .isEqualTo(FunQuizCatalog.V_FOODIE);
-    assertThat(FunQuizResolver.resolve(answers("love", "countdown", "maybe_not", "dance")))
+    assertThat(FunQuizResolver.resolve(answers("love", "countdown", "maybe_not", "dance", "blue")))
         .isEqualTo(FunQuizCatalog.V_DANCER);
   }
 
   @Test
   void musicAndFoodExpectationsAlsoGiveTheFoodieVerdict() {
-    assertThat(FunQuizResolver.resolve(answers("love", "music_food", "maybe_not", "home")))
+    assertThat(FunQuizResolver.resolve(answers("love", "music_food", "maybe_not", "home", "blue")))
         .isEqualTo(FunQuizCatalog.V_FOODIE);
   }
 
   @Test
-  void otherCombinationsGetTheGeneralVerdict() {
-    assertThat(FunQuizResolver.resolve(answers("love", "processing", "gossip", "cash")))
-        .isEqualTo(FunQuizCatalog.V_GENERAL);
+  void anyNonWhiteDressIsApproved() {
+    for (String color : new String[] { "pink", "blue", "green", "red", "purple", "black", "gold", "undecided" }) {
+      assertThat(FunQuizResolver.resolve(answers("love", "processing", "gossip", "cash", color)))
+          .isEqualTo(FunQuizCatalog.V_DRESS_APPROVED);
+      assertThat(FunQuizCatalog.findVerdict(FunQuizCatalog.V_DRESS_APPROVED).orElseThrow().approved())
+          .isTrue();
+    }
+  }
+
+  @Test
+  void withoutAnAnswerForTheDressTheGeneralVerdictApplies() {
     assertThat(FunQuizResolver.resolve(Map.of())).isEqualTo(FunQuizCatalog.V_GENERAL);
   }
 
@@ -58,7 +67,7 @@ class FunQuizResolverTest {
   void theSameAnswersAlwaysGiveTheSameVerdict() {
     Set<String> results = new HashSet<>();
     for (int i = 0; i < 100; i++) {
-      results.add(FunQuizResolver.resolve(answers("agenda", "hiding_it", "fake_eye", "transfer")));
+      results.add(FunQuizResolver.resolve(answers("agenda", "hiding_it", "fake_eye", "transfer", "blue")));
     }
     assertThat(results).hasSize(1);
   }

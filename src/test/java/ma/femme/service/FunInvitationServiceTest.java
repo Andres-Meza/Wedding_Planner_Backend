@@ -79,6 +79,7 @@ class FunInvitationServiceTest {
     answer("excitement", "countdown");
     answer("tears", "maybe_not");
     answer("gift", "cash");
+    answer("dress", "blue");
   }
 
   @Test
@@ -190,10 +191,11 @@ class FunInvitationServiceTest {
 
   @Test
   void completingStoresTheVerdictFromTheResolverRules() {
-    answer("attend", "outfit");
+    answer("attend", "love");
     answer("excitement", "countdown");
     answer("tears", "maybe_not");
     answer("gift", "home");
+    answer("dress", "white");
 
     FunInvitationDTO dto = service.complete(juan.getFunToken());
 

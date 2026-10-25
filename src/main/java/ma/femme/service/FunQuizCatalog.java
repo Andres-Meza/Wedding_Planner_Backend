@@ -38,25 +38,27 @@ public final class FunQuizCatalog {
   public static final String Q_EXCITEMENT = "excitement";
   public static final String Q_TEARS = "tears";
   public static final String Q_GIFT = "gift";
+  public static final String Q_DRESS = "dress";
 
-  public static final String O_ATTEND_OUTFIT = "outfit";
   public static final String O_ATTEND_FOOD = "food";
   public static final String O_EXCITEMENT_MORE_THAN_COUPLE = "more_than_couple";
   public static final String O_EXCITEMENT_MUSIC_FOOD = "music_food";
   public static final String O_TEARS_FROM_ENTRANCE = "from_entrance";
   public static final String O_GIFT_DANCE = "dance";
+  public static final String O_DRESS_WHITE = "white";
 
   public static final String V_WHITE_DRESS = "WHITE_DRESS";
   public static final String V_MOST_EXCITED = "MOST_EXCITED";
   public static final String V_DRAMATIC = "DRAMATIC";
   public static final String V_FOODIE = "FOODIE";
   public static final String V_DANCER = "DANCER";
+  public static final String V_DRESS_APPROVED = "DRESS_APPROVED";
   public static final String V_GENERAL = "GENERAL";
 
   public static final List<Question> QUESTIONS = List.of(
       question(Q_ATTEND, "¿Quieres venir a nuestra boda?", null,
           option("obvio", "¡Obvio! No me lo perdería por nada."),
-          option(O_ATTEND_OUTFIT, "¡Sí! Ya estoy buscando qué ponerme."),
+          option("outfit", "¡Sí! Ya estoy buscando qué ponerme."),
           option("love", "Voy porque los quiero mucho."),
           option("agenda", "Estoy revisando mi agenda, no me presiones."),
           option(O_ATTEND_FOOD, "¿Habrá comida? Es para un amigo.")),
@@ -82,7 +84,21 @@ public final class FunQuizCatalog {
           option("handmade", "Un detalle hecho con mucho amor."),
           option(O_GIFT_DANCE, "Mi presencia y mis mejores pasos de baile."),
           option("transfer", "¿También reciben transferencias?"),
-          option("thinking", "Todavía estoy pensando en qué regalar.")));
+          option("thinking", "Todavía estoy pensando en qué regalar.")),
+
+      // Última pregunta: el blanco es la broma (reservado para la novia);
+      // cualquier otro color se aprueba.
+      question(Q_DRESS, "¿Qué color de vestido usarás en nuestra boda?",
+          "Si vas de traje, elige el color de tu outfit.",
+          option(O_DRESS_WHITE, "Blanco"),
+          option("pink", "Rosa"),
+          option("blue", "Azul"),
+          option("green", "Verde"),
+          option("red", "Rojo"),
+          option("purple", "Morado"),
+          option("black", "Negro"),
+          option("gold", "Dorado"),
+          option("undecided", "Todavía no lo decido")));
 
   public static final List<Verdict> VERDICTS = List.of(
       new Verdict(V_WHITE_DRESS, "Vestido blanco", "No aprobado", false,
@@ -100,6 +116,9 @@ public final class FunQuizCatalog {
       new Verdict(V_DANCER, "Alma de la pista", "Aprobado", true,
           "Tus mejores pasos ya tienen escenario esperándote. "
               + "Ven con zapatos cómodos."),
+      new Verdict(V_DRESS_APPROVED, "Vestido aprobado", "Aprobado", true,
+          "Ese color luce perfecto para la ocasión. "
+              + "Prepárate para estrenarlo en la pista de baile."),
       new Verdict(V_GENERAL, "Invitado oficial", "Aprobado", true,
           "Respondiste como todo un invitado de lujo. "
               + "Tu lugar en nuestra celebración está más que merecido."));

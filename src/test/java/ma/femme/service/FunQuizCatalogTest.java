@@ -28,11 +28,12 @@ class FunQuizCatalogTest {
   }
 
   @Test
-  void hasTheFourRequestedQuestions() {
+  void hasTheRequestedQuestionsWithTheDressAsTheLastOne() {
     assertThat(FunQuizCatalog.QUESTIONS)
         .extracting(FunQuizCatalog.Question::key)
-        .containsExactly("attend", "excitement", "tears", "gift");
+        .containsExactly("attend", "excitement", "tears", "gift", "dress");
     assertThat(FunQuizCatalog.findQuestion("gift").orElseThrow().options()).hasSize(6);
+    assertThat(FunQuizCatalog.findQuestion("dress").orElseThrow().findOption("white")).isPresent();
   }
 
   @Test
